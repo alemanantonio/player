@@ -1,0 +1,582 @@
+import { useEffect, useState } from "react";
+import type { AudioController } from "./audio";
+import { Icon } from "./Icon";
+import { TrackArtwork } from "./TrackArtwork";
+import { Lyrics } from "./LyricsPanel";
+import { QueuePanel } from "./QueuePanel";
+import { groupIdentity, groupKey, type LibraryTrack } from "./library";
+import {
+  albumGroups,
+  formatTime,
+  playableTracks,
+  searchMusic,
+} from "./musicViews";
+import { entryFromTrack, usePlaylists } from "./playlists";
+import type { AppView } from "./navigation";
+import { sourcesAction, type SourceEntry } from "./sources";
+
+type ScreenProps = {
+  audio: AudioController;
+  tracks: LibraryTrack[];
+  navigate: (view: AppView) => void;
+};
+
+function AlbumShelf({
+  title,
+  groups,
+  audio,
+  onBrowse,
+}: {
+  title: string;
+  groups: LibraryTrack[][];
+  audio: AudioController;
+  onBrowse: () => void;
+}) {
+  if (!groups.length) return null;
+  return (
+    <section className="music-section">
+      <div className="section-heading">
+        <h2>{title}</h2>
+        <button className="text-button" onClick={onBrowse}>
+          Ver todos
+        </button>
+      </div>
+      <div className="album-shelf">
+        {groups.slice(0, 5).map((items) => (
+          <button
+            className="album-card"
+            key={items[0].id}
+            disabled={!audio.available || !playableTracks(items).length}
+            onClick={() =>
+              void audio.openEntries(playableTracks(items).map(entryFromTrack))
+            }
+          >
+            <span className="album-image">
+              <TrackArtwork
+                className="album-art"
+                trackId={items[0].id}
+                fallbackId={items[0].artwork_id}
+              />
+              <span className="album-play">
+                <Icon name="play" />
+              </span>
+            </span>
+            <strong>{items[0].album ?? "Sin álbum"}</strong>
+            <span>
+              {items[0].album_artist ??
+                items[0].artist ??
+                "Artista desconocido"}
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function Home({
+  audio,
+  tracks,
+  navigate,
+  onImport,
+}: ScreenProps & { onImport: () => void }) {
+  const current = tracks.find(
+    (t) =>
+      t.id === audio.state.track?.trackId ||
+      t.local_path === audio.state.track?.path,
+  );
+  const recent = [...tracks]
+    .sort((a, b) => (b.last_played ?? 0) - (a.last_played ?? 0))
+    .filter((t) => t.last_played);
+  const added = [...tracks].sort((a, b) => b.added_at - a.added_at);
+  const favorites = tracks.filter((t) => t.favorite);
+  const mostPlayed = [...tracks]
+    .filter((t) => t.play_count > 0)
+    .sort((a, b) => b.play_count - a.play_count);
+  const featured = current ?? recent[0] ?? added[0];
+  return (
+    <div className="home-screen">
+      <section className="listening-hero">
+        <div className={`hero-cover ${featured ? "" : "brand-cover"}`}>
+          {featured ? (
+            <TrackArtwork
+              className="hero-art"
+              trackId={featured.id}
+              fallbackId={featured.artwork_id}
+              animate
+              paused={audio.state.status !== "playing"}
+            />
+          ) : (
+            <>
+              <img src="/favicon.svg" alt="" />
+              <span>El sonido de tu mundo.</span>
+            </>
+          )}
+        </div>
+        <div className="hero-copy">
+          <p className="hero-kicker">
+            {current
+              ? "En tu reproductor"
+              : recent.length
+                ? "Vuelve a tu música"
+                : "Tu espacio para escuchar"}
+          </p>
+          <h2>{featured?.title ?? "Todo empieza\ncon una canción."}</h2>
+          <p className="hero-description">
+            {featured
+              ? `${featured.artist ?? "Artista desconocido"}${featured.album ? ` · ${featured.album}` : ""}`
+              : "Tus archivos, tus descubrimientos y tus canciones favoritas. Juntos en Zenith."}
+          </p>
+          <div className="hero-actions">
+            <button
+              className="button primary"
+              disabled={!audio.available}
+              onClick={() => {
+                if (current) void audio.toggle();
+                else if (featured && playableTracks([featured]).length)
+                  void audio.openEntries([entryFromTrack(featured)]);
+                else onImport();
+              }}
+            >
+              <Icon
+                name={
+                  current && audio.state.status === "playing"
+                    ? "pause"
+                    : featured
+                      ? "play"
+                      : "plus"
+                }
+                size={19}
+              />
+              {current && audio.state.status === "playing"
+                ? "Pausar"
+                : featured
+                  ? "Escuchar ahora"
+                  : "Agregar música"}
+            </button>
+            <button
+              className="button subtle"
+              onClick={() => navigate(featured ? "nowPlaying" : "sources")}
+            >
+              {featured ? "Abrir reproductor" : "Conectar una fuente"}
+            </button>
+          </div>
+          <div className="hero-footnote">
+            <Icon name="library" size={15} />
+            <span>
+              {tracks.length
+                ? `${tracks.length} canciones en tu biblioteca`
+                : "Tu biblioteca local siempre va contigo"}
+            </span>
+          </div>
+        </div>
+      </section>
+      {!tracks.length && (
+        <section className="welcome-grid">
+          <button onClick={onImport} disabled={!audio.available}>
+            <Icon name="library" size={25} />
+            <span>
+              <strong>Haz espacio a tu música</strong>
+              <small>Agrega una carpeta o tus archivos favoritos.</small>
+            </span>
+            <Icon name="plus" size={18} />
+          </button>
+          <button onClick={() => navigate("sources")}>
+            <Icon name="sources" size={25} />
+            <span>
+              <strong>Conecta tus mundos</strong>
+              <small>Drive, Dropbox, OneDrive y WebDAV.</small>
+            </span>
+            <Icon name="plus" size={18} />
+          </button>
+        </section>
+      )}
+      <AlbumShelf
+        title="Vuelve a escucharlos"
+        groups={albumGroups(recent)}
+        audio={audio}
+        onBrowse={() => navigate("history")}
+      />
+      <AlbumShelf
+        title="Recién llegados"
+        groups={albumGroups(added)}
+        audio={audio}
+        onBrowse={() => navigate("albums")}
+      />
+      <AlbumShelf
+        title="Tus favoritos"
+        groups={albumGroups(favorites)}
+        audio={audio}
+        onBrowse={() => navigate("favorites")}
+      />
+      {!!mostPlayed.length && (
+        <section className="music-section">
+          <div className="section-heading">
+            <h2>Siempre vuelves a ellas</h2>
+            <span className="secondary">Según tus escuchas</span>
+          </div>
+          <SongResults tracks={mostPlayed.slice(0, 5)} audio={audio} />
+        </section>
+      )}
+      {!tracks.length && (
+        <div className="quiet-note">
+          <img src="/favicon.svg" alt="" />
+          <p>
+            La música es tuya.
+            <br />
+            <span>Zenith solo le da su lugar.</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SongResults({
+  tracks,
+  audio,
+}: {
+  tracks: LibraryTrack[];
+  audio: AudioController;
+}) {
+  return (
+    <div className="discovery-songs">
+      {tracks.map((t, i) => (
+        <button
+          key={t.id}
+          className={`discovery-song ${audio.state.track?.trackId === t.id ? "current" : ""}`}
+          disabled={!audio.available || !t.local_path || t.missing}
+          onClick={() =>
+            void audio.openEntries(
+              playableTracks(tracks.slice(i)).map(entryFromTrack),
+            )
+          }
+        >
+          <span className="song-index">{i + 1}</span>
+          <TrackArtwork
+            className="library-cover"
+            trackId={t.id}
+            fallbackId={t.artwork_id}
+          />
+          <span className="song-info">
+            <strong>{t.title}</strong>
+            <span>{t.artist ?? "Artista desconocido"}</span>
+          </span>
+          <span className="song-album">{t.album ?? "Sin álbum"}</span>
+          <span className="song-duration">
+            {formatTime(t.duration === null ? null : t.duration * 1000)}
+          </span>
+          <Icon name="play" size={16} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Search({
+  audio,
+  tracks,
+  navigate,
+  query,
+  onQuery,
+  onAlbum,
+}: ScreenProps & {
+  query: string;
+  onQuery: (value: string) => void;
+  onAlbum: (query: string, view: AppView) => void;
+}) {
+  const [filter, setFilter] = useState("Todo");
+  const lists = usePlaylists();
+  const matched = searchMusic(tracks, query);
+  const albums = albumGroups(matched);
+  const artists = [
+    ...new Map(matched.map((t) => [groupIdentity(t, "Artistas"), t])).values(),
+  ];
+  const playlists = query.trim()
+    ? lists.playlists.filter((p) =>
+        p.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
+      )
+    : [];
+  return (
+    <section className="search-screen">
+      <label className="large-search">
+        <Icon name="search" size={24} />
+        <input
+          autoFocus
+          type="search"
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+          placeholder="¿Qué quieres escuchar?"
+          aria-label="Buscar música"
+        />
+      </label>
+      <div className="filter-pills" aria-label="Filtrar búsqueda">
+        {["Todo", "Canciones", "Álbumes", "Artistas", "Listas"].map((item) => (
+          <button
+            key={item}
+            aria-pressed={filter === item}
+            onClick={() => setFilter(item)}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+      {!query.trim() ? (
+        <div className="search-invitation">
+          <Icon name="search" size={42} />
+          <h2>Encuentra tu próxima canción</h2>
+          <p>Busca un título, un artista, un álbum o una de tus listas.</p>
+        </div>
+      ) : (
+        <>
+          {!matched.length && !playlists.length && (
+            <div className="library-empty">
+              <h2>Sin coincidencias para “{query}”</h2>
+              <p>Prueba con otro nombre o consulta tus fuentes conectadas.</p>
+            </div>
+          )}
+          {["Todo", "Canciones"].includes(filter) && !!matched.length && (
+            <section className="music-section">
+              <h2>
+                Canciones <span className="result-count">{matched.length}</span>
+              </h2>
+              <SongResults tracks={matched} audio={audio} />
+            </section>
+          )}
+          {["Todo", "Álbumes"].includes(filter) && !!albums.length && (
+            <section className="music-section">
+              <h2>Álbumes</h2>
+              <div className="search-groups">
+                {albums.map((items) => (
+                  <button
+                    key={items[0].id}
+                    onClick={() => onAlbum(items[0].album ?? "", "albums")}
+                  >
+                    <TrackArtwork
+                      className="library-cover"
+                      trackId={items[0].id}
+                    />
+                    <span>
+                      <strong>{items[0].album ?? "Sin álbum"}</strong>
+                      <small>{items[0].artist}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+          {["Todo", "Artistas"].includes(filter) && !!artists.length && (
+            <section className="music-section">
+              <h2>Artistas</h2>
+              <div className="search-groups">
+                {artists.map((artist) => (
+                  <button
+                    key={groupIdentity(artist, "Artistas")}
+                    onClick={() => onAlbum(artist.artist ?? "", "artists")}
+                  >
+                    <Icon name="artists" />
+                    <strong>{groupKey(artist, "Artistas")}</strong>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+          {["Todo", "Listas"].includes(filter) && (
+            <section className="music-section">
+              <h2>Listas</h2>
+              {!playlists.length && (
+                <p className="secondary">No hay listas con ese nombre.</p>
+              )}
+              <div className="search-groups">
+                {playlists.map((list) => (
+                  <button
+                    key={list.id}
+                    disabled={!audio.available || !list.entries.length}
+                    onClick={() => void audio.openEntries(list.entries)}
+                  >
+                    <Icon name="playlists" />
+                    <span>
+                      <strong>{list.name}</strong>
+                      <small>{list.entries.length} canciones</small>
+                    </span>
+                    <Icon name="play" size={16} />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+          <button
+            className="external-search-link"
+            onClick={() => navigate("sources")}
+          >
+            <Icon name="sources" />
+            Buscar en fuentes conectadas <span>Elegir servicio</span>
+          </button>
+        </>
+      )}
+    </section>
+  );
+}
+
+export function NowPlaying({
+  audio,
+  current,
+  navigate,
+}: {
+  audio: AudioController;
+  current?: LibraryTrack;
+  navigate: (view: AppView) => void;
+}) {
+  const [panel, setPanel] = useState("lyrics");
+  const track = audio.state.track;
+  return (
+    <div className="now-screen">
+      <section className="now-stage">
+        <TrackArtwork
+          className="now-art"
+          trackId={current?.id}
+          path={track?.path}
+          fallbackId={current?.artwork_id}
+          animate
+          paused={audio.state.status !== "playing"}
+        />
+        <div className="now-copy">
+          <p className="hero-kicker">
+            {audio.state.status === "playing"
+              ? "Ahora suena"
+              : track
+                ? "A tu ritmo"
+                : "Todo listo para escuchar"}
+          </p>
+          <h2>
+            {current?.title ?? track?.title ?? "Un momento para tu música."}
+          </h2>
+          <p>{current?.artist ?? "Elige una canción de tu biblioteca"}</p>
+          <span className="secondary">
+            {[current?.album, track?.format].filter(Boolean).join(" · ")}
+          </span>
+          <div className="hero-actions">
+            <button
+              className="button subtle"
+              onClick={() => navigate("artwork")}
+            >
+              <Icon name="artwork" size={17} />
+              Cambiar portada
+            </button>
+            <button
+              className="button subtle"
+              disabled={!audio.available || !track}
+              onClick={() => void audio.stop()}
+            >
+              Detener
+            </button>
+            <button
+              className="icon-button"
+              title="Pantalla completa"
+              aria-label="Pantalla completa"
+              onClick={() => {
+                const action = document.fullscreenElement
+                  ? document.exitFullscreen()
+                  : document.documentElement.requestFullscreen();
+                void action.catch(audio.reportError);
+              }}
+            >
+              <Icon name="expand" />
+            </button>
+          </div>
+        </div>
+      </section>
+      <section className="now-details">
+        <div className="filter-pills" aria-label="Contenido del reproductor">
+          <button
+            aria-pressed={panel === "lyrics"}
+            onClick={() => setPanel("lyrics")}
+          >
+            <Icon name="lyrics" size={17} />
+            Letras
+          </button>
+          <button
+            aria-pressed={panel === "queue"}
+            onClick={() => setPanel("queue")}
+          >
+            <Icon name="queue" size={17} />A continuación{" "}
+            <span>{audio.state.queue.length}</span>
+          </button>
+        </div>
+        {panel === "lyrics" ? (
+          <Lyrics audio={audio} compact />
+        ) : (
+          <QueuePanel audio={audio} />
+        )}
+      </section>
+    </div>
+  );
+}
+
+export function Downloads({
+  audio,
+  navigate,
+}: {
+  audio: AudioController;
+  navigate: (view: AppView) => void;
+}) {
+  const [entries, setEntries] = useState<SourceEntry[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(audio.available);
+  useEffect(() => {
+    let disposed = false;
+    if (audio.available)
+      void sourcesAction({ kind: "downloads" })
+        .then((snapshot) => {
+          if (!disposed) setEntries(snapshot.results);
+        })
+        .catch((reason) => {
+          if (!disposed) setError(String(reason));
+        })
+        .finally(() => {
+          if (!disposed) setLoading(false);
+        });
+    return () => {
+      disposed = true;
+    };
+  }, [audio.available]);
+  return (
+    <section>
+      <p className="page-description">
+        Música de tus fuentes guardada en este equipo. Disponible sin conexión
+        mientras se conserve la caché.
+      </p>
+      {loading && <p role="status">Cargando descargas…</p>}
+      {error && <p role="alert">{error}</p>}
+      {!loading && !entries.length && (
+        <div className="search-invitation">
+          <Icon name="downloads" size={44} />
+          <h2>Tu música, también sin conexión</h2>
+          <p>Las canciones que descargues desde tus fuentes aparecerán aquí.</p>
+          <button
+            className="button primary"
+            onClick={() => navigate("sources")}
+          >
+            Explorar mis fuentes
+          </button>
+        </div>
+      )}
+      <div className="discovery-songs">
+        {entries.map((entry) => (
+          <button
+            className="discovery-song"
+            key={entry.id}
+            onClick={() => void audio.openFiles([entry.id])}
+          >
+            <Icon name="music" />
+            <span className="song-info">
+              <strong>{entry.name}</strong>
+              <span>Guardada en este equipo</span>
+            </span>
+            <Icon name="play" />
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}

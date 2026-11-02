@@ -15,7 +15,12 @@ export interface Phase {
   name: string;
   objective: string;
   view: View;
-  status: "Base disponible" | "En pruebas" | "Vista previa" | "Pendiente";
+  status:
+    | "Validada"
+    | "Base disponible"
+    | "En pruebas"
+    | "Vista previa"
+    | "Pendiente";
   checks: string[];
 }
 
@@ -26,7 +31,7 @@ export const phases: Phase[] = [
     objective:
       "Preparar una aplicación nativa compilable y las herramientas de desarrollo.",
     view: "phases",
-    status: "Base disponible",
+    status: "Validada",
     checks: [
       "Abrir la ventana nativa en cada plataforma objetivo.",
       "Ejecutar tipos, lint, formato y comprobaciones de Rust.",
@@ -39,7 +44,7 @@ export const phases: Phase[] = [
     objective:
       "Conservar datos y preferencias en archivos locales, sin bases de datos.",
     view: "settings",
-    status: "En pruebas",
+    status: "Validada",
     checks: [
       "Guardar una preferencia y recuperarla tras reiniciar.",
       "Recuperar un JSON dañado desde un respaldo válido.",
@@ -52,7 +57,7 @@ export const phases: Phase[] = [
     name: "Motor de audio",
     objective: "Reproducir archivos locales de forma estable y sin conexión.",
     view: "queue",
-    status: "Base disponible",
+    status: "Validada",
     checks: [
       "Reproducir, pausar, detener, cambiar de pista y buscar una posición.",
       "Ajustar volumen, silencio, repetición y aleatorio.",
@@ -66,7 +71,7 @@ export const phases: Phase[] = [
     objective:
       "Importar, organizar y mantener actualizados los archivos musicales.",
     view: "library",
-    status: "En pruebas",
+    status: "Validada",
     checks: [
       "Importar una carpeta dos veces sin duplicar sus entradas.",
       "Detectar archivos agregados, modificados, movidos y eliminados.",
@@ -79,7 +84,7 @@ export const phases: Phase[] = [
     objective:
       "Organizar listas y una cola independiente que se pueda restaurar.",
     view: "playlists",
-    status: "En pruebas",
+    status: "Validada",
     checks: [
       "Crear, editar, reordenar e intercambiar listas.",
       "Modificar la cola sin cambiar la lista de origen.",
@@ -92,7 +97,7 @@ export const phases: Phase[] = [
     objective:
       "Identificar pistas de distintas fuentes sin confundir sus versiones.",
     view: "library",
-    status: "En pruebas",
+    status: "Validada",
     checks: [
       "Conservar la identidad interna al reiniciar o mover archivos.",
       "Distinguir versiones en vivo, remixes y artistas homónimos.",
@@ -104,7 +109,7 @@ export const phases: Phase[] = [
     name: "Letras",
     objective: "Buscar, guardar y mostrar letras con o sin sincronización.",
     view: "lyrics",
-    status: "En pruebas",
+    status: "Validada",
     checks: [
       "Leer letras locales, embebidas y de proveedores compatibles.",
       "Mantener la sincronía al pausar, buscar y ajustar el desfase.",
@@ -116,7 +121,7 @@ export const phases: Phase[] = [
     name: "Portadas",
     objective: "Encontrar portadas válidas y conservar alternativas locales.",
     view: "artwork",
-    status: "En pruebas",
+    status: "Validada",
     checks: [
       "Comprobar el orden de proveedores y la alternativa local.",
       "Rechazar imágenes inválidas y conservar los recursos permitidos.",
@@ -129,7 +134,7 @@ export const phases: Phase[] = [
     objective:
       "Conectar servicios independientes mediante sus capacidades autorizadas.",
     view: "sources",
-    status: "En pruebas",
+    status: "Validada",
     checks: [
       "Conectar, consultar y desconectar cada proveedor.",
       "Probar reproducción y descarga cuando estén permitidas.",
@@ -142,7 +147,7 @@ export const phases: Phase[] = [
     objective:
       "Conectar las pantallas, los controles y los estados de cada módulo.",
     view: "library",
-    status: "Vista previa",
+    status: "En pruebas",
     checks: [
       "Recorrer los flujos principales con teclado y ratón.",
       "Revisar estados vacíos, de carga y de error.",

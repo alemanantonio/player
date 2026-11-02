@@ -233,6 +233,7 @@ pub struct Snapshot {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Action {
     Snapshot,
+    Downloads,
     External {
         enabled: bool,
     },
@@ -2578,6 +2579,31 @@ fn execute_with(
     let mut downloaded: Option<String> = None;
     match action {
         Action::Snapshot => {}
+        Action::Downloads => {
+            let directory = storage.document_path("cache/audio");
+            if directory.exists() {
+                for item in std::fs::read_dir(&directory)
+                    .map_err(|_| "No se pudieron leer las descargas".to_string())?
+                    .flatten()
+                {
+                    let path = item.path();
+                    let name = item.file_name().to_string_lossy().to_string();
+                    if !item.file_type().is_ok_and(|kind| kind.is_file()) || !is_audio_name(&name) {
+                        continue;
+                    }
+                    results.push(Entry {
+                        provider: ProviderId::Local,
+                        id: path.to_string_lossy().to_string(),
+                        name,
+                        kind: "audio".into(),
+                        detail: "Descarga guardada".into(),
+                        size: item.metadata().ok().map(|metadata| metadata.len()),
+                        source_url: None,
+                    });
+                }
+                results.sort_by(|a, b| a.name.cmp(&b.name));
+            }
+        }
         Action::External { enabled } => {
             let _lock = storage.library_lock();
             let mut document = load(storage)?;

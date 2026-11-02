@@ -12,7 +12,13 @@ import {
 import { useResourceTrack } from "./ResourceTrack";
 import "./Resources.css";
 import { TrackArtwork } from "./TrackArtwork";
-export function Lyrics({ audio }: { audio: AudioController }) {
+export function Lyrics({
+  audio,
+  compact = false,
+}: {
+  audio: AudioController;
+  compact?: boolean;
+}) {
   const { track, error: trackError, selector } = useResourceTrack(audio);
   const [snapshot, setSnapshot] = useState<LyricsSnapshot>(defaultLyrics);
   const [error, setError] = useState("");
@@ -177,7 +183,7 @@ export function Lyrics({ audio }: { audio: AudioController }) {
           fallbackId={track?.artwork_id}
         />
       )}
-      {selector}
+      {!compact && selector}
       {!track ? (
         <p>
           Reproduce o selecciona una canción de la biblioteca para ver sus
@@ -185,29 +191,31 @@ export function Lyrics({ audio }: { audio: AudioController }) {
         </p>
       ) : (
         <>
-          <div className="resource-heading">
-            <div>
-              <h2>{track.title}</h2>
-              <p>{track.artist}</p>
-            </div>
-            <div className="button-group">
-              <button
-                className="button"
-                onClick={() => audio.toggle()}
-                disabled={!audio.available}
-              >
-                Reproducir / Pausar
-              </button>
-              {fullscreen && (
+          {!compact && (
+            <div className="resource-heading">
+              <div>
+                <h2>{track.title}</h2>
+                <p>{track.artist}</p>
+              </div>
+              <div className="button-group">
                 <button
                   className="button"
-                  onClick={() => void document.exitFullscreen()}
+                  onClick={() => audio.toggle()}
+                  disabled={!audio.available}
                 >
-                  Salir de pantalla completa
+                  Reproducir / Pausar
                 </button>
-              )}
+                {fullscreen && (
+                  <button
+                    className="button"
+                    onClick={() => void document.exitFullscreen()}
+                  >
+                    Salir de pantalla completa
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           <div className="resource-modes" aria-label="Modo de letras">
             {(
               [
@@ -287,211 +295,219 @@ export function Lyrics({ audio }: { audio: AudioController }) {
               )}
             </p>
           )}
-          <fieldset className="resource-controls" disabled={busy}>
-            <legend>Presentación y sincronización</legend>
-            <label>
-              Desfase de esta canción (ms)
-              <input
-                type="number"
-                min={-600000}
-                max={600000}
-                step={100}
-                value={snapshot.saved.offset}
-                onChange={(e) => settings({}, Number(e.target.value))}
-              />
-            </label>
-            <label>
-              Desfase global (ms)
-              <input
-                type="number"
-                min={-600000}
-                max={600000}
-                step={100}
-                value={preferences.offset}
-                onChange={(e) => settings({ offset: Number(e.target.value) })}
-              />
-            </label>
-            <label>
-              Tamaño
-              <select
-                value={preferences.size}
-                onChange={(e) => settings({ size: Number(e.target.value) })}
-              >
-                {[20, 24, 30, 40, 56, 72].map((n) => (
-                  <option key={n}>{n}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Tipografía
-              <select
-                value={preferences.font}
-                onChange={(e) => settings({ font: e.target.value })}
-              >
-                <option value="system">Sistema</option>
-                <option value="serif">Serif</option>
-                <option value="sans-serif">Sans serif</option>
-              </select>
-            </label>
-            <label>
-              Texto
-              <input
-                type="color"
-                value={preferences.color}
-                onChange={(e) => settings({ color: e.target.value })}
-              />
-            </label>
-            <label>
-              Línea activa
-              <input
-                type="color"
-                value={preferences.active_color}
-                onChange={(e) => settings({ active_color: e.target.value })}
-              />
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={preferences.external}
-                onChange={(e) => settings({ external: e.target.checked })}
-              />
-              Permitir consultas a LRCLIB
-            </label>
-          </fieldset>
-          <div className="resource-actions">
-            <button
-              className="button"
-              disabled={busy}
-              onClick={() => void importFile()}
-            >
-              Abrir LRC / TXT
-            </button>
-            <button
-              className="button"
-              disabled={busy}
-              onClick={() => void importFile(true)}
-            >
-              Importar LyricsPlus v2
-            </button>
-            <button
-              className="button"
-              disabled={busy || !preferences.external}
-              onClick={() => void run({ kind: "search", query: null })}
-            >
-              Buscar letras
-            </button>
-            <button
-              className="button"
-              disabled={busy}
-              onClick={() => setEditor(candidate?.raw ?? "")}
-            >
-              Editar
-            </button>
-            <button
-              className="button"
-              disabled={busy || !snapshot.saved.selected}
-              onClick={() => void exportFile()}
-            >
-              Descargar letra
-            </button>
-            <button
-              className="button"
-              disabled={busy || !candidate}
-              onClick={() => void run({ kind: "delete" })}
-            >
-              Quitar letra guardada
-            </button>
-          </div>
-          <form
-            className="resource-actions"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const query = new FormData(e.currentTarget).get("query");
-              void run({ kind: "search", query: String(query) });
-            }}
-          >
-            <input
-              name="query"
-              aria-label="Buscar otra versión de letras"
-              placeholder="Título, artista o versión"
-              maxLength={500}
-            />
-            <button className="button" disabled={busy || !preferences.external}>
-              Buscar otra versión
-            </button>
-          </form>
-          {editor !== null && (
-            <div className="lyric-editor">
+          <details className="advanced-details lyric-tools">
+            <summary>Ajustar, buscar o editar letras</summary>
+            <fieldset className="resource-controls" disabled={busy}>
+              <legend>Presentación y sincronización</legend>
               <label>
-                Texto LRC o TXT
-                <textarea
-                  value={editor}
-                  maxLength={1048576}
-                  rows={9}
-                  onChange={(e) => setEditor(e.target.value)}
+                Desfase de esta canción (ms)
+                <input
+                  type="number"
+                  min={-600000}
+                  max={600000}
+                  step={100}
+                  value={snapshot.saved.offset}
+                  onChange={(e) => settings({}, Number(e.target.value))}
                 />
               </label>
+              <label>
+                Desfase global (ms)
+                <input
+                  type="number"
+                  min={-600000}
+                  max={600000}
+                  step={100}
+                  value={preferences.offset}
+                  onChange={(e) => settings({ offset: Number(e.target.value) })}
+                />
+              </label>
+              <label>
+                Tamaño
+                <select
+                  value={preferences.size}
+                  onChange={(e) => settings({ size: Number(e.target.value) })}
+                >
+                  {[20, 24, 30, 40, 56, 72].map((n) => (
+                    <option key={n}>{n}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Tipografía
+                <select
+                  value={preferences.font}
+                  onChange={(e) => settings({ font: e.target.value })}
+                >
+                  <option value="system">Sistema</option>
+                  <option value="serif">Serif</option>
+                  <option value="sans-serif">Sans serif</option>
+                </select>
+              </label>
+              <label>
+                Texto
+                <input
+                  type="color"
+                  value={preferences.color}
+                  onChange={(e) => settings({ color: e.target.value })}
+                />
+              </label>
+              <label>
+                Línea activa
+                <input
+                  type="color"
+                  value={preferences.active_color}
+                  onChange={(e) => settings({ active_color: e.target.value })}
+                />
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={preferences.external}
+                  onChange={(e) => settings({ external: e.target.checked })}
+                />
+                Permitir consultas a LRCLIB
+              </label>
+            </fieldset>
+            <div className="resource-actions">
               <button
                 className="button"
                 disabled={busy}
-                onClick={() =>
-                  void run({ kind: "save", raw: editor }).then(() =>
-                    setEditor(null),
-                  )
-                }
+                onClick={() => void importFile()}
               >
-                Guardar edición local
+                Abrir LRC / TXT
               </button>
-              <button className="button" onClick={() => setEditor(null)}>
-                Cancelar
+              <button
+                className="button"
+                disabled={busy}
+                onClick={() => void importFile(true)}
+              >
+                Importar LyricsPlus v2
+              </button>
+              <button
+                className="button"
+                disabled={busy || !preferences.external}
+                onClick={() => void run({ kind: "search", query: null })}
+              >
+                Buscar letras
+              </button>
+              <button
+                className="button"
+                disabled={busy}
+                onClick={() => setEditor(candidate?.raw ?? "")}
+              >
+                Editar
+              </button>
+              <button
+                className="button"
+                disabled={busy || !snapshot.saved.selected}
+                onClick={() => void exportFile()}
+              >
+                Descargar letra
+              </button>
+              <button
+                className="button"
+                disabled={busy || !candidate}
+                onClick={() => void run({ kind: "delete" })}
+              >
+                Quitar letra guardada
               </button>
             </div>
-          )}
-          {!!snapshot.candidates.length && (
-            <div>
-              <h3>Elegir coincidencia</h3>
-              <ul className="resource-results">
-                {snapshot.candidates.map((c) => (
-                  <li key={c.id}>
-                    <div>
-                      <strong>
-                        {c.title} · {c.artist}
-                      </strong>
-                      <p>
-                        {c.album} · {c.duration ?? "?"} s · {c.provider} ·
-                        coincidencia {c.score}/100
-                      </p>
-                      <p>
-                        {c.parsed.lines
-                          .slice(0, 2)
-                          .map((l) => l.text)
-                          .join(" / ")}
-                      </p>
-                    </div>
-                    <button
-                      className="button"
-                      disabled={busy}
-                      onClick={() => void run({ kind: "select", candidate: c })}
-                    >
-                      Usar y guardar
-                    </button>
-                    <button
-                      className="button"
-                      disabled={busy}
-                      onClick={() => void run({ kind: "reject", id: c.id })}
-                    >
-                      Rechazar
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <p className="inline-note">
-            LyricsPlus: importación de respuestas v2; su servidor público
-            documentado no está disponible. Las letras guardadas funcionan sin
-            conexión.
-          </p>
+            <form
+              className="resource-actions"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const query = new FormData(e.currentTarget).get("query");
+                void run({ kind: "search", query: String(query) });
+              }}
+            >
+              <input
+                name="query"
+                aria-label="Buscar otra versión de letras"
+                placeholder="Título, artista o versión"
+                maxLength={500}
+              />
+              <button
+                className="button"
+                disabled={busy || !preferences.external}
+              >
+                Buscar otra versión
+              </button>
+            </form>
+            {editor !== null && (
+              <div className="lyric-editor">
+                <label>
+                  Texto LRC o TXT
+                  <textarea
+                    value={editor}
+                    maxLength={1048576}
+                    rows={9}
+                    onChange={(e) => setEditor(e.target.value)}
+                  />
+                </label>
+                <button
+                  className="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void run({ kind: "save", raw: editor }).then(() =>
+                      setEditor(null),
+                    )
+                  }
+                >
+                  Guardar edición local
+                </button>
+                <button className="button" onClick={() => setEditor(null)}>
+                  Cancelar
+                </button>
+              </div>
+            )}
+            {!!snapshot.candidates.length && (
+              <div>
+                <h3>Elegir coincidencia</h3>
+                <ul className="resource-results">
+                  {snapshot.candidates.map((c) => (
+                    <li key={c.id}>
+                      <div>
+                        <strong>
+                          {c.title} · {c.artist}
+                        </strong>
+                        <p>
+                          {c.album} · {c.duration ?? "?"} s · {c.provider} ·
+                          coincidencia {c.score}/100
+                        </p>
+                        <p>
+                          {c.parsed.lines
+                            .slice(0, 2)
+                            .map((l) => l.text)
+                            .join(" / ")}
+                        </p>
+                      </div>
+                      <button
+                        className="button"
+                        disabled={busy}
+                        onClick={() =>
+                          void run({ kind: "select", candidate: c })
+                        }
+                      >
+                        Usar y guardar
+                      </button>
+                      <button
+                        className="button"
+                        disabled={busy}
+                        onClick={() => void run({ kind: "reject", id: c.id })}
+                      >
+                        Rechazar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p className="inline-note">
+              LyricsPlus: importación de respuestas v2; su servidor público
+              documentado no está disponible. Las letras guardadas funcionan sin
+              conexión.
+            </p>
+          </details>
         </>
       )}
       {(error || trackError) && <p role="alert">{error || trackError}</p>}

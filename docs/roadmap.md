@@ -2,7 +2,13 @@
 
 This document organizes the planned scope of the desktop player.
 
-The features and platforms described are development targets, not verified compatibility claims. The repository includes the initial application scaffold and development tooling; no phase is considered complete without its deliverables and validation evidence.
+The features and platforms described are development targets, not verified compatibility claims. The repository includes the initial application scaffold and development tooling; phase status follows implementation evidence and recorded user acceptance.
+
+## Acceptance update — 2026-11-02
+
+The user confirmed validation of all prior phases (1–9) before requesting phase 10. They are recorded as validated by the user. This supersedes the pending-acceptance status in historical implementation notes; no additional platform-specific evidence is inferred from the confirmation.
+
+Phase 10 replaces the phase-checking workspace with the listening experience described in [design.md](design.md): home, search, collection galleries, persistent player, Now Playing with lyrics/queue, offline downloads and consolidated settings. Implementation and automated checks are available; final acceptance of the redesigned installed application remains pending.
 
 ## Project Principles
 
@@ -495,4 +501,4 @@ Minimum task template:
 - Blockers:
 ```
 
-No remote tasks have been created, and no phase is marked as completed. The statuses shown in the development interface ("Base disponible", "En pruebas", "Vista previa") summarize implementation and automated coverage only; they do not replace the manual acceptance recorded for each phase.
+No remote tasks have been created. Phases 1–9 are validated by the user as recorded above. Phase 10 is in testing. Subsequent phases remain pending; the product interface no longer exposes development phase reviews.

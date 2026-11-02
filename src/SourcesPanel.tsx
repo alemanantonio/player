@@ -28,14 +28,16 @@ const nativeOnlySourcesMessage =
 export function Sources({
   audio,
   onOpenLibrary,
+  initialQuery = "",
 }: {
   audio: AudioController;
   onOpenLibrary: () => void;
+  initialQuery?: string;
 }) {
   const [snapshot, setSnapshot] = useState(emptySources);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [target, setTarget] = useState<ProviderId>("local");
   const [forms, setForms] = useState<Record<string, Record<string, string>>>(
     {},

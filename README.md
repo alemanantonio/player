@@ -2,15 +2,17 @@
 
 A local-first desktop music player built with Tauri 2, React, TypeScript, and Rust.
 
-The repository provides the application foundation, local audio playback, and a persistent local music library with import, monitoring, metadata editing, favorites, statistics, and duplicate reporting. Lyrics, artwork providers, and external source connections are implemented and tracked as in-progress in the [roadmap](docs/roadmap.md). The audio engine selection, format matrix, and manual verification steps are documented in [audio-engine.md](docs/audio-engine.md).
+The repository provides the application foundation, local audio playback, and a persistent local music library with import, monitoring, metadata editing, favorites, statistics, and duplicate reporting. Lyrics, artwork providers, and external source connections are implemented; user acceptance is recorded in the [roadmap](docs/roadmap.md). The audio engine selection, format matrix, and manual verification steps are documented in [audio-engine.md](docs/audio-engine.md).
 
-## Development Interface
+## Listening Interface
 
-Navigate between the library, playlists, queue, lyrics, artwork, sources, equalizer, and settings. The **Fases** screen exposes all 16 roadmap phases with summarized manual acceptance checklists and shortcuts to their modules.
+Phase 10 turns the development workspace into a daily listening app inspired by the supplied HTML: Zenith branding, dark/light/system themes, Inicio, grouped search, collection galleries, favorites, playlists, history, downloads and connected sources. Ahora suena brings large artwork, lyrics and the independent queue together. The persistent bottom player keeps native playback controls accessible across navigation.
 
-In the desktop application, **Cola → Abrir y reemplazar cola** loads local audio files into an independent persistent queue. Playback, pause, stop, seeking, volume, mute, repeat, shuffle, and output restart are connected to the Rust audio engine. The browser-only preview keeps playback controls disabled because Tauri commands are unavailable there.
+All existing library, metadata, playlist, lyric, artwork and provider actions remain reachable through these listening flows. Advanced tools use disclosures instead of filling the main track rows. Development phase checklists are no longer part of the product. See the [interface design notes](docs/design.md) for navigation, design decisions and validation.
 
-Playlists, queue sessions, listening history, and the theme persist in the desktop application. Equalizer preview controls and manual review checkboxes remain session-only. Pending native features have disabled controls, and manual review marks do not mark a phase as implemented. See the [interface design notes](docs/design.md).
+In the desktop application, **Cola → Abrir y reemplazar cola** loads local audio files into an independent persistent queue. Playback, pause, stop, seeking, volume, mute, repeat, shuffle, and output restart use the Rust engine. The browser-only preview keeps native actions disabled. Themes, playlists, sessions and listening history retain the existing persistence contracts.
+
+The user confirmed phases 1–9 validated on 2026-11-02. Historical module documents retain their original test/acceptance notes; the updated roadmap records this later acceptance.
 
 ## Local Music Library
 
@@ -34,11 +36,11 @@ Connections and non-secret settings persist in `config/providers.json`, which th
 
 Phase 2 stores every document as versioned JSON under a single per-platform root: `%APPDATA%\Zenith Player` on Windows, `~/Library/Application Support/Zenith Player` on macOS, and `$XDG_DATA_HOME` (or `~/.local/share`) on Linux. Portable mode is an explicit choice: placing a `zenith-portable` marker file next to the executable moves the root into a `Zenith Player` folder beside it.
 
-Each write goes to a temporary file that is flushed to disk and then replaced, so an interrupted write never destroys the previous copy. New writes use the v2 envelope (`{"version":2,"updated_at":…,"data":…}`), with v1 read/migration support; a file written by a newer major version is preserved instead of being overwritten. A damaged document is moved to `logs/` and restored from the newest usable backup in `backups/` (the five newest per document), and the event is reported in **Configuración → Almacenamiento** and in `logs/storage.log`.
+Each write goes to a temporary file that is flushed to disk and then replaced, so an interrupted write never destroys the previous copy. New writes use the v2 envelope (`{"version":2,"updated_at":…,"data":…}`), with v1 read/migration support; a file written by a newer major version is preserved instead of being overwritten. A damaged document is moved to `logs/` and restored from the newest usable backup in `backups/` (the five newest per document), and the event is reported in **Configuración → Biblioteca y datos** and in `logs/storage.log`.
 
-**Configuración → Almacenamiento** shows the real storage root, write permissions, document and backup counts, cache size, and the in-memory index counters. It can create a manual backup, export and import the data bundle (configuration, library, and lyrics — never `config/providers.json`), and clear the cache without touching documents or music files. In the browser preview these actions stay disabled and explain that they require the desktop application.
+**Configuración → Biblioteca y datos** shows the real storage root, write permissions, document and backup counts, cache size, and the in-memory index counters. It can create a manual backup, export and import the data bundle (configuration, library, and lyrics — never `config/providers.json`), and clear the cache without touching documents or music files. In the browser preview these actions stay disabled and explain that they require the desktop application.
 
-The Rust layer (`src-tauri/src/storage/`) carries 25 unit tests covering layout, atomic writes, recovery, backup pruning, export/import, and indexes. Manual acceptance on installed builds (survive a restart, simulate a corrupted file end to end) is still pending, which is why the phase is marked "En pruebas" instead of completed.
+The Rust layer (`src-tauri/src/storage/`) carries 25 unit tests covering layout, atomic writes, recovery, backup pruning, export/import, and indexes. The user reported prior phases validated on 2026-11-02; historical platform checklists remain documented for reference.
 
 ## Development
 

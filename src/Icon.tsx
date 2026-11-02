@@ -12,10 +12,79 @@ type IconName =
   | "repeat"
   | "repeatOne"
   | "shuffle"
-  | "music";
+  | "music"
+  | "home"
+  | "search"
+  | "heart"
+  | "favorites"
+  | "albums"
+  | "artists"
+  | "genres"
+  | "downloads"
+  | "nowPlaying"
+  | "more"
+  | "close"
+  | "expand"
+  | "plus";
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, ReactNode> = {
+    home: (
+      <>
+        <path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7" />
+      </>
+    ),
+    search: (
+      <>
+        <circle cx="10.5" cy="10.5" r="6.5" />
+        <path d="m16 16 5 5" />
+      </>
+    ),
+    heart: (
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" />
+    ),
+    favorites: (
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" />
+    ),
+    albums: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="12" cy="12" r="1" />
+      </>
+    ),
+    artists: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+      </>
+    ),
+    genres: (
+      <>
+        <path d="m12 3 9 5-9 5-9-5zM3 12l9 5 9-5M3 16l9 5 9-5" />
+      </>
+    ),
+    downloads: (
+      <>
+        <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+      </>
+    ),
+    nowPlaying: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="4" />
+        <path d="m10 8 6 4-6 4z" />
+      </>
+    ),
+    more: (
+      <>
+        <circle cx="5" cy="12" r="1" />
+        <circle cx="12" cy="12" r="1" />
+        <circle cx="19" cy="12" r="1" />
+      </>
+    ),
+    close: <path d="m6 6 12 12M6 18 18 6" />,
+    expand: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5" />,
+    plus: <path d="M12 4v16M4 12h16" />,
     library: (
       <>
         <path d="M4 4v16M8 4v16M13 5l5-1 3 15-5 1z" />

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Phase 10
+
+- Replace the phase-review workspace with a listening app inspired by the supplied HTML and the real Zenith icon.
+- Add Inicio with real library/history shelves, grouped search, collection galleries and focused Now Playing with artwork, lyrics and queue.
+- Keep playback persistent; add current-track favorites, lyrics/queue access, light/dark/system themes and artwork-derived backgrounds.
+- Preserve previous import, editing, playlist, lyric, artwork, source and storage workflows through menus and consolidated settings.
+- Add offline cached-download browsing and regression coverage; review browser layouts at normal and minimum desktop window sizes.
+- Record the user's acceptance of phases 1–9 and keep phase 10 awaiting final visual acceptance.
+
 ## CI portability fixes
 
 - Give view components distinct Panel filenames and reject case-insensitive module collisions before Quality/build checks.

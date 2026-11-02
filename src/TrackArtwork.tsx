@@ -151,7 +151,9 @@ export function TrackArtwork({
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
       ) : (
-        <span aria-hidden="true">♫</span>
+        <span aria-hidden="true">
+          <img className="fallback-mark" src="/favicon.svg" alt="" />
+        </span>
       )}
     </span>
   );

@@ -17,14 +17,24 @@ import {
 } from "./library";
 import "./Library.css";
 import { TrackArtwork } from "./TrackArtwork";
+import { Icon } from "./Icon";
 import { entryFromTrack, usePlaylists } from "./playlists";
 import "./Playlists.css";
 
-export function Library({ audio }: { audio: AudioController }) {
+export function Library({
+  audio,
+  initialView = "Canciones",
+  initialQuery = "",
+}: {
+  audio: AudioController;
+  initialView?: LibraryView;
+  initialQuery?: string;
+}) {
   const lists = usePlaylists();
   const [library, setLibrary] = useState(emptyLibrary);
-  const [view, setView] = useState<LibraryView>("Canciones");
-  const [query, setQuery] = useState("");
+  const [view, setView] = useState<LibraryView>(initialView);
+  const [query, setQuery] = useState(initialQuery);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<LibraryTrack | null>(null);
@@ -119,7 +129,12 @@ export function Library({ audio }: { audio: AudioController }) {
     else groups.set(key, [track]);
   }
   function play(selected: LibraryTrack) {
-    const playable = tracks.filter((t) => !t.missing && t.local_path);
+    const playable = tracks.filter(
+      (t) =>
+        !t.missing &&
+        t.local_path &&
+        (selectedGroup === null || groupIdentity(t, view) === selectedGroup),
+    );
     const index = playable.findIndex((t) => t.id === selected.id);
     if (index < 0) return;
     // The selected song begins a queue in the current view's order.
@@ -138,7 +153,10 @@ export function Library({ audio }: { audio: AudioController }) {
             type="search"
             placeholder="Buscar canciones, artistas o álbumes"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedGroup(null);
+            }}
           />
         </label>
         <button disabled={!native || busy} onClick={() => void add(false)}>
@@ -147,37 +165,44 @@ export function Library({ audio }: { audio: AudioController }) {
         <button disabled={!native || busy} onClick={() => void add(true)}>
           Agregar carpetas
         </button>
-        <button
-          disabled={!native || busy}
-          onClick={() =>
-            void (async () => {
-              setBusy(true);
-              setError(null);
-              try {
-                const path = await open({
-                  title: "Importar metadatos de biblioteca",
-                  multiple: false,
-                  directory: false,
-                  filters: [{ name: "Metadatos Zenith", extensions: ["json"] }],
-                });
-                if (typeof path === "string")
-                  await run({ kind: "importMetadata", path });
-              } catch (reason) {
-                setError(String(reason));
-              } finally {
-                setBusy(false);
+        <details className="library-tools advanced-details">
+          <summary>Organizar biblioteca</summary>
+          <div className="resource-actions">
+            <button
+              disabled={!native || busy}
+              onClick={() =>
+                void (async () => {
+                  setBusy(true);
+                  setError(null);
+                  try {
+                    const path = await open({
+                      title: "Importar metadatos de biblioteca",
+                      multiple: false,
+                      directory: false,
+                      filters: [
+                        { name: "Metadatos Zenith", extensions: ["json"] },
+                      ],
+                    });
+                    if (typeof path === "string")
+                      await run({ kind: "importMetadata", path });
+                  } catch (reason) {
+                    setError(String(reason));
+                  } finally {
+                    setBusy(false);
+                  }
+                })()
               }
-            })()
-          }
-        >
-          Importar metadatos JSON
-        </button>
-        <button
-          disabled={!native || busy || !library.locations.length}
-          onClick={() => void run({ kind: "rescan" })}
-        >
-          Volver a explorar
-        </button>
+            >
+              Importar metadatos JSON
+            </button>
+            <button
+              disabled={!native || busy || !library.locations.length}
+              onClick={() => void run({ kind: "rescan" })}
+            >
+              Volver a explorar
+            </button>
+          </div>
+        </details>
       </div>
       {!native && (
         <p className="module-note">
@@ -229,7 +254,10 @@ export function Library({ audio }: { audio: AudioController }) {
           <button
             key={tab}
             aria-pressed={view === tab}
-            onClick={() => setView(tab)}
+            onClick={() => {
+              setView(tab);
+              setSelectedGroup(null);
+            }}
           >
             {tab}
           </button>
@@ -258,130 +286,167 @@ export function Library({ audio }: { audio: AudioController }) {
           </p>
         </div>
       )}
-      {[...groups].map(([key, items]) => (
-        <section key={key} aria-label={groupKey(items[0], view) || view}>
-          {groupKey(items[0], view) && (
-            <h2 className="library-group">{groupKey(items[0], view)}</h2>
-          )}
-          <div className="library-tracks">
-            {items.map((t) => (
-              <article className="library-track" key={t.id}>
-                <TrackArtwork
-                  className="library-cover"
-                  trackId={t.id}
-                  fallbackId={t.artwork_id}
-                />
-                <button
-                  className="library-track-title"
-                  disabled={t.missing || !t.local_path}
-                  onClick={() => play(t)}
-                  title={t.local_path ?? undefined}
-                >
-                  <strong>{t.title || "Sin título"}</strong>
-                  <span>
-                    {t.artist || "Artista desconocido"} ·{" "}
-                    {t.album || "Sin álbum"}
-                  </span>
-                  <small>
-                    {!t.local_path
-                      ? "Sin archivo local"
-                      : t.missing
-                        ? "Archivo no disponible"
-                        : t.format}
-                    {t.play_count > 0
-                      ? ` · ${t.play_count} reproducciones`
-                      : ""}
-                    {view === "Duplicados"
-                      ? library.duplicates.some(
-                          (g) => g.confirmed && g.ids.includes(t.id),
-                        )
-                        ? " · Contenido idéntico"
-                        : " · Posible duplicado"
-                      : ""}
-                    {t.last_played && view === "Historial"
-                      ? ` · ${new Date(t.last_played * 1000).toLocaleString()}`
-                      : ""}
-                  </small>
-                </button>
-                <div className="library-actions">
-                  <button
-                    className="button small"
-                    disabled={t.missing || !t.local_path}
-                    onClick={() =>
-                      void audio.queueAction({
-                        kind: "append",
-                        paths: [t.local_path!],
-                        after_current: true,
-                      })
-                    }
-                  >
-                    Reproducir después
-                  </button>
-                  <button
-                    className="button small"
-                    disabled={t.missing || !t.local_path}
-                    onClick={() =>
-                      void audio.queueAction({
-                        kind: "append",
-                        paths: [t.local_path!],
-                        after_current: false,
-                      })
-                    }
-                  >
-                    Añadir al final
-                  </button>
-                  <label>
-                    <span className="sr-only">
-                      Añadir {t.title} a una lista
-                    </span>
-                    <select
-                      value=""
-                      disabled={lists.busy || !lists.playlists.length}
-                      onChange={(e) => {
-                        if (e.target.value)
-                          void lists.run({
-                            kind: "add",
-                            id: e.target.value,
-                            entries: [entryFromTrack(t)],
-                          });
-                      }}
+      {selectedGroup !== null && (
+        <button className="text-button" onClick={() => setSelectedGroup(null)}>
+          Volver a {view.toLocaleLowerCase()}
+        </button>
+      )}
+      {selectedGroup === null &&
+      ["Álbumes", "Artistas", "Géneros"].includes(view) ? (
+        <div
+          className={`library-gallery ${view === "Artistas" ? "artist-gallery" : ""}`}
+        >
+          {[...groups].map(([key, items]) => (
+            <button
+              className="collection-card"
+              key={key}
+              onClick={() => setSelectedGroup(key)}
+            >
+              <TrackArtwork
+                className="collection-art"
+                trackId={items[0].id}
+                fallbackId={items[0].artwork_id}
+              />
+              <strong>{groupKey(items[0], view)}</strong>
+              <span>
+                {items.length} {items.length === 1 ? "canción" : "canciones"}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        [...groups]
+          .filter(([key]) => selectedGroup === null || selectedGroup === key)
+          .map(([key, items]) => (
+            <section key={key} aria-label={groupKey(items[0], view) || view}>
+              {groupKey(items[0], view) && (
+                <h2 className="library-group">{groupKey(items[0], view)}</h2>
+              )}
+              <div className="library-tracks">
+                {items.map((t) => (
+                  <article className="library-track" key={t.id}>
+                    <TrackArtwork
+                      className="library-cover"
+                      trackId={t.id}
+                      fallbackId={t.artwork_id}
+                    />
+                    <button
+                      className="library-track-title"
+                      disabled={t.missing || !t.local_path}
+                      onClick={() => play(t)}
+                      title={t.local_path ?? undefined}
                     >
-                      <option value="">Añadir a lista…</option>
-                      {lists.playlists.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                <span className="library-duration">
-                  {t.duration === null
-                    ? "—"
-                    : `${Math.floor(t.duration / 60)}:${String(t.duration % 60).padStart(2, "0")}`}
-                </span>
-                <button
-                  disabled={busy}
-                  aria-label={`${t.favorite ? "Quitar de" : "Agregar a"} favoritos: ${t.title}`}
-                  aria-pressed={t.favorite}
-                  onClick={() =>
-                    void run({
-                      kind: "favorite",
-                      id: t.id,
-                      favorite: !t.favorite,
-                    })
-                  }
-                >
-                  {t.favorite ? "♥" : "♡"}
-                </button>
-                <button disabled={busy} onClick={() => setEditing(t)}>
-                  Editar
-                </button>
-              </article>
-            ))}
-          </div>
-        </section>
-      ))}
+                      <strong>{t.title || "Sin título"}</strong>
+                      <span>
+                        {t.artist || "Artista desconocido"} ·{" "}
+                        {t.album || "Sin álbum"}
+                      </span>
+                      <small>
+                        {!t.local_path
+                          ? "Sin archivo local"
+                          : t.missing
+                            ? "Archivo no disponible"
+                            : t.format}
+                        {t.play_count > 0
+                          ? ` · ${t.play_count} reproducciones`
+                          : ""}
+                        {view === "Duplicados"
+                          ? library.duplicates.some(
+                              (g) => g.confirmed && g.ids.includes(t.id),
+                            )
+                            ? " · Contenido idéntico"
+                            : " · Posible duplicado"
+                          : ""}
+                        {t.last_played && view === "Historial"
+                          ? ` · ${new Date(t.last_played * 1000).toLocaleString()}`
+                          : ""}
+                      </small>
+                    </button>
+                    <details className="track-menu">
+                      <summary aria-label={`Más opciones: ${t.title}`}>
+                        <Icon name="more" />
+                      </summary>
+                      <div className="library-actions">
+                        <button
+                          className="button small"
+                          disabled={t.missing || !t.local_path}
+                          onClick={() =>
+                            void audio.queueAction({
+                              kind: "append",
+                              paths: [t.local_path!],
+                              after_current: true,
+                            })
+                          }
+                        >
+                          Reproducir después
+                        </button>
+                        <button
+                          className="button small"
+                          disabled={t.missing || !t.local_path}
+                          onClick={() =>
+                            void audio.queueAction({
+                              kind: "append",
+                              paths: [t.local_path!],
+                              after_current: false,
+                            })
+                          }
+                        >
+                          Añadir al final
+                        </button>
+                        <label>
+                          <span className="sr-only">
+                            Añadir {t.title} a una lista
+                          </span>
+                          <select
+                            value=""
+                            disabled={lists.busy || !lists.playlists.length}
+                            onChange={(e) => {
+                              if (e.target.value)
+                                void lists.run({
+                                  kind: "add",
+                                  id: e.target.value,
+                                  entries: [entryFromTrack(t)],
+                                });
+                            }}
+                          >
+                            <option value="">Añadir a lista…</option>
+                            {lists.playlists.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button disabled={busy} onClick={() => setEditing(t)}>
+                          Editar información
+                        </button>
+                      </div>
+                    </details>
+                    <span className="library-duration">
+                      {t.duration === null
+                        ? "—"
+                        : `${Math.floor(t.duration / 60)}:${String(t.duration % 60).padStart(2, "0")}`}
+                    </span>
+                    <button
+                      disabled={busy}
+                      aria-label={`${t.favorite ? "Quitar de" : "Agregar a"} favoritos: ${t.title}`}
+                      aria-pressed={t.favorite}
+                      onClick={() =>
+                        void run({
+                          kind: "favorite",
+                          id: t.id,
+                          favorite: !t.favorite,
+                        })
+                      }
+                    >
+                      <Icon name="heart" size={18} />
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))
+      )}
       <details className="library-locations">
         <summary>Ubicaciones ({library.locations.length})</summary>
         <p>

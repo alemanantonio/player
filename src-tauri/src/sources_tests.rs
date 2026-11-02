@@ -1247,3 +1247,22 @@ fn helper_rules_of_the_contract() {
     assert_eq!(parsed.get("code").map(String::as_str), Some("uno dos"));
     assert_eq!(parsed.get("state").map(String::as_str), Some("abc"));
 }
+
+#[test]
+fn downloaded_audio_is_available_offline_and_excludes_unfinished_files() {
+    let _guard = serial();
+    let f = Fixture::new();
+    let directory = f.storage.document_path("cache/audio");
+    std::fs::create_dir_all(&directory).unwrap();
+    std::fs::write(directory.join("saved.mp3"), AUDIO_BYTES).unwrap();
+    std::fs::write(directory.join("unfinished.tmp"), AUDIO_BYTES).unwrap();
+    std::fs::create_dir_all(directory.join("folder.wav")).unwrap();
+    let snapshot = f
+        .run(&plain_env(), Action::Downloads)
+        .expect("offline downloads");
+    assert!(!snapshot.external);
+    assert_eq!(snapshot.results.len(), 1);
+    assert_eq!(snapshot.results[0].name, "saved.mp3");
+    assert!(Path::new(&snapshot.results[0].id).is_file());
+    assert!(f.vault.entries.lock().unwrap().is_empty());
+}
