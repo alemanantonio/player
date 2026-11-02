@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Expanded player
+
+- Simplify copy across the app, remove repeated slogans/headings, consolidate library views into a selector and move secondary queue/provider details into disclosures.
+- Add anchored, interruptible player expansion without bounce, subtle press/menu/artwork feedback, and motion/transparency/contrast preference support.
+- Expand the mini player over the current page instead of navigating to a separate Now Playing section.
+- Show cover art and playback controls on the left, synchronized lyrics on the right, and a blurred cover background.
+- Preserve the underlying page/filter/scroll and audio controller; support minimize, Escape, restored focus, queue switching and lyric/artwork editing.
+- Share the lyric reading surface with the existing manager, retain plain-text/karaoke display, and avoid showing a previous track's lyrics during a track change.
+
 ## Unreleased — Phase 10
 
 - Replace the phase-review workspace with a listening app inspired by the supplied HTML and the real Zenith icon.

@@ -206,8 +206,7 @@ export function Library({
       </div>
       {!native && (
         <p className="module-note">
-          Abre la aplicación de escritorio para importar y reproducir tu música
-          local.
+          Importa música desde la aplicación de escritorio.
         </p>
       )}
       {busy && <p role="status">Procesando biblioteca…</p>}
@@ -249,22 +248,24 @@ export function Library({
             </ul>
           </details>
         )}
-      <div className="tabs library-tabs" aria-label="Vistas de biblioteca">
-        {libraryViews.map((tab) => (
-          <button
-            key={tab}
-            aria-pressed={view === tab}
-            onClick={() => {
-              setView(tab);
+      <div className="library-viewbar">
+        <label>
+          <span className="sr-only">Vista de biblioteca</span>
+          <select
+            aria-label="Vista de biblioteca"
+            value={view}
+            onChange={(event) => {
+              setView(event.target.value as LibraryView);
               setSelectedGroup(null);
             }}
           >
-            {tab}
-          </button>
-        ))}
-      </div>
-      <div className="list-heading">
-        <span>{view}</span>
+            {libraryViews.map((tab) => (
+              <option key={tab} value={tab}>
+                {tab}
+              </option>
+            ))}
+          </select>
+        </label>
         <span>
           {tracks.length} {tracks.length === 1 ? "canción" : "canciones"}
         </span>
@@ -278,11 +279,11 @@ export function Library({
       )}
       {!tracks.length && (
         <div className="library-empty">
-          <h2>{query ? "Sin resultados" : "Tu biblioteca empieza aquí"}</h2>
+          <h2>{query ? "Sin resultados" : "Biblioteca vacía"}</h2>
           <p>
             {query
               ? "Prueba otra búsqueda o vista."
-              : "Agrega archivos o carpetas. La música permanece en su ubicación original."}
+              : "Agrega archivos o una carpeta."}
           </p>
         </div>
       )}

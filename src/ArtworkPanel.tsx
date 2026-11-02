@@ -88,10 +88,7 @@ export function Artwork({ audio }: { audio: AudioController }) {
     <section className="resources">
       {selector}
       {!track ? (
-        <p>
-          Reproduce o selecciona una canción de la biblioteca para gestionar sus
-          portadas.
-        </p>
+        <p>Selecciona una canción para cambiar su portada.</p>
       ) : (
         <>
           <div className="artwork-preview">
@@ -127,13 +124,16 @@ export function Artwork({ audio }: { audio: AudioController }) {
                   )}
                 </div>
               ) : (
-                <p>Se usará la portada local o la imagen predeterminada.</p>
+                <p>Sin portada seleccionada.</p>
               )}
-              <p className="inline-note">
-                Prioridad: Apple Music animada → Apple Music estática →
-                Archive.org → YouTube → local → predeterminada. La selección
-                manual tiene preferencia.
-              </p>
+              <details className="advanced-details">
+                <summary>Selección automática</summary>
+                <p className="inline-note">
+                  Prioridad: Apple Music animada → Apple Music estática →
+                  Archive.org → YouTube → local → predeterminada. La selección
+                  manual tiene preferencia.
+                </p>
+              </details>
               <button
                 className="button"
                 onClick={() => setPaused((v) => !v)}
@@ -254,14 +254,17 @@ export function Artwork({ audio }: { audio: AudioController }) {
               Buscar otra coincidencia
             </button>
           </form>
-          <p className="inline-note">
-            Apple Music y YouTube aceptan recursos obtenidos con autorización
-            mediante un manifiesto local. La consulta directa requiere conectar
-            sus APIs. Archive.org permite revisar candidatos y descargar
-            imágenes con licencia Creative Commons reconocida. La animación
-            admite GIF hasta 120 cuadros y se detiene fuera de vista, al ocultar
-            la ventana y con movimiento reducido.
-          </p>
+          <details className="advanced-details">
+            <summary>Fuentes y formatos</summary>
+            <p className="inline-note">
+              Apple Music y YouTube aceptan recursos obtenidos con autorización
+              mediante un manifiesto local. La consulta directa requiere
+              conectar sus APIs. Archive.org permite revisar candidatos y
+              descargar imágenes con licencia Creative Commons reconocida. La
+              animación admite GIF hasta 120 cuadros y se detiene fuera de
+              vista, al ocultar la ventana y con movimiento reducido.
+            </p>
+          </details>
           {!!snapshot.candidates.length && (
             <>
               <h3>Revisar portadas</h3>

@@ -37,10 +37,7 @@ export function QueuePanel({ audio }: { audio: AudioController }) {
   }
   return (
     <section className="queue-panel" aria-busy={busy || lists.busy}>
-      <p className="page-description">
-        {state.queue.length} entradas. La cola se guarda automáticamente, con la
-        canción y la posición, y se restaura sin comenzar a reproducir.
-      </p>
+      <p className="page-description">{state.queue.length} canciones</p>
       <div className="toolbar">
         {(
           [
@@ -66,89 +63,92 @@ export function QueuePanel({ audio }: { audio: AudioController }) {
           Vaciar cola
         </button>
       </div>
-      <div className="toolbar">
-        <button
-          className={`button ${state.shuffle ? "active" : ""}`}
-          aria-pressed={state.shuffle}
-          disabled={!audio.available}
-          onClick={() => void audio.setShuffle(!state.shuffle)}
-        >
-          Aleatorio
-        </button>
-        <label>
-          Repetición{" "}
-          <select
-            value={state.repeat}
+      <details className="advanced-details queue-options">
+        <summary>Opciones de la cola</summary>
+        <div className="toolbar">
+          <button
+            className={`button ${state.shuffle ? "active" : ""}`}
+            aria-pressed={state.shuffle}
             disabled={!audio.available}
-            onChange={(e) =>
-              void audio.setRepeat(e.target.value as "off" | "one" | "all")
+            onClick={() => void audio.setShuffle(!state.shuffle)}
+          >
+            Aleatorio
+          </button>
+          <label>
+            Repetición{" "}
+            <select
+              value={state.repeat}
+              disabled={!audio.available}
+              onChange={(e) =>
+                void audio.setRepeat(e.target.value as "off" | "one" | "all")
+              }
+            >
+              <option value="off">Desactivada</option>
+              <option value="all">Toda la cola</option>
+              <option value="one">Una canción</option>
+            </select>
+          </label>
+          <button
+            className="button"
+            disabled={!audio.available}
+            onClick={() => void audio.queueAction({ kind: "save" })}
+          >
+            Guardar copia de la cola
+          </button>
+          <button
+            className="button"
+            disabled={!audio.available}
+            onClick={() => void audio.queueAction({ kind: "restore" })}
+          >
+            Restaurar copia guardada
+          </button>
+          <button
+            className="button"
+            disabled={!audio.available}
+            onClick={() => void audio.restartOutput()}
+          >
+            Reiniciar salida
+          </button>
+        </div>
+        <form
+          className="toolbar"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void lists
+              .run({ kind: "create", name, entries: state.queue })
+              .then((result) => {
+                if (result) {
+                  setName("");
+                  setNotice("Cola guardada como una nueva lista independiente");
+                }
+              });
+          }}
+        >
+          <label className="search-field">
+            <span className="sr-only">
+              Nombre para guardar la cola como lista
+            </span>
+            <input
+              value={name}
+              maxLength={128}
+              placeholder="Guardar cola como lista"
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </label>
+          <button
+            className="button"
+            disabled={
+              !audio.available ||
+              lists.busy ||
+              !state.queue.length ||
+              !name.trim()
             }
           >
-            <option value="off">Desactivada</option>
-            <option value="all">Toda la cola</option>
-            <option value="one">Una canción</option>
-          </select>
-        </label>
-        <button
-          className="button"
-          disabled={!audio.available}
-          onClick={() => void audio.queueAction({ kind: "save" })}
-        >
-          Guardar copia de la cola
-        </button>
-        <button
-          className="button"
-          disabled={!audio.available}
-          onClick={() => void audio.queueAction({ kind: "restore" })}
-        >
-          Restaurar copia guardada
-        </button>
-        <button
-          className="button"
-          disabled={!audio.available}
-          onClick={() => void audio.restartOutput()}
-        >
-          Reiniciar salida
-        </button>
-      </div>
-      <form
-        className="toolbar"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void lists
-            .run({ kind: "create", name, entries: state.queue })
-            .then((result) => {
-              if (result) {
-                setName("");
-                setNotice("Cola guardada como una nueva lista independiente");
-              }
-            });
-        }}
-      >
-        <label className="search-field">
-          <span className="sr-only">
-            Nombre para guardar la cola como lista
-          </span>
-          <input
-            value={name}
-            maxLength={128}
-            placeholder="Guardar cola como lista"
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </label>
-        <button
-          className="button"
-          disabled={
-            !audio.available ||
-            lists.busy ||
-            !state.queue.length ||
-            !name.trim()
-          }
-        >
-          Guardar como lista
-        </button>
-      </form>
+            Guardar como lista
+          </button>
+        </form>
+      </details>
       {(audio.notice || notice) && (
         <p role="status" className="inline-note">
           {notice || audio.notice}
@@ -218,17 +218,10 @@ export function QueuePanel({ audio }: { audio: AudioController }) {
       </ul>
       {!state.queue.length && (
         <div className="library-empty">
-          <h2>No hay canciones en espera</h2>
-          <p>
-            Agrega música desde la biblioteca, una lista o archivos locales.
-          </p>
+          <h2>Cola vacía</h2>
+          <p>Añade canciones desde tu biblioteca.</p>
         </div>
       )}
-      <p className="inline-note">
-        “Reproducir después” inserta las canciones inmediatamente después de la
-        actual. “Añadir al final” conserva todas las entradas que ya estaban
-        esperando. Las entradas ausentes se conservan y se saltan al avanzar.
-      </p>
     </section>
   );
 }

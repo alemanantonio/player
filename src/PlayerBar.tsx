@@ -11,12 +11,14 @@ export function PlayerBar({
   navigate,
   onOpenFiles,
   onFavorite,
+  expanded = false,
 }: {
   audio: AudioController;
   current?: LibraryTrack;
   navigate: (view: AppView) => void;
   onOpenFiles: () => void;
   onFavorite: () => void;
+  expanded?: boolean;
 }) {
   const playback = audio.state;
   const track = playback.track;
@@ -40,35 +42,63 @@ export function PlayerBar({
         ? "Repetir una"
         : "Sin repetición";
   return (
-    <footer className="player-bar" aria-label="Reproductor">
+    <footer
+      className={`player-bar${expanded ? " player-controls-expanded" : ""}`}
+      aria-label="Reproductor"
+    >
+      {expanded && (
+        <TrackArtwork
+          className="expanded-cover"
+          trackId={current?.id ?? track?.trackId}
+          path={track?.path}
+          fallbackId={current?.artwork_id}
+          animate
+          paused={!isPlaying}
+        />
+      )}
       <div className="now-playing">
-        <button
-          className="cover-link"
-          aria-label="Abrir Ahora suena"
-          onClick={() => navigate("nowPlaying")}
-        >
-          <TrackArtwork
-            className="mini-artwork"
-            trackId={track?.trackId}
-            path={track?.path}
-          />
-        </button>
-        <div>
-          <button className="track-link" onClick={() => navigate("nowPlaying")}>
-            <strong>{track?.title ?? "Elige tu próxima canción"}</strong>
+        {!expanded && (
+          <button
+            className="cover-link"
+            aria-label="Maximizar reproductor"
+            aria-haspopup="dialog"
+            onClick={() => navigate("nowPlaying")}
+          >
+            <TrackArtwork
+              className="mini-artwork"
+              trackId={track?.trackId}
+              path={track?.path}
+            />
           </button>
+        )}
+        <div>
+          {expanded ? (
+            <strong className="expanded-track-title">
+              {current?.title ?? track?.title ?? "Sin reproducción"}
+            </strong>
+          ) : (
+            <button
+              className="track-link"
+              aria-haspopup="dialog"
+              onClick={() => navigate("nowPlaying")}
+            >
+              <strong>{track?.title ?? "Sin reproducción"}</strong>
+            </button>
+          )}
           <span>
-            {track
-              ? [
-                  track.format,
-                  current?.artist ?? "Archivo de audio",
-                  current?.album,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")
-              : audio.available
-                ? "Abre archivos de audio para comenzar"
-                : "Tu música, a tu ritmo"}
+            {expanded && current
+              ? (current.artist ?? "Artista desconocido")
+              : track
+                ? [
+                    track.format,
+                    current?.artist ?? "Archivo de audio",
+                    current?.album,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
+                : audio.available
+                  ? "Elige una canción"
+                  : "Elige una canción"}
           </span>
         </div>
         <button
@@ -152,7 +182,11 @@ export function PlayerBar({
               }
             }}
           />
-          <span>{formatTime(playback.durationMs)}</span>
+          <span>
+            {expanded && playback.durationMs !== null
+              ? `−${formatTime(Math.max(0, playback.durationMs - playback.positionMs))}`
+              : formatTime(playback.durationMs)}
+          </span>
         </div>
       </div>
       <div className="player-tools">
@@ -200,22 +234,26 @@ export function PlayerBar({
             size={18}
           />
         </button>
-        <button
-          className="icon-button"
-          aria-label="Abrir letras"
-          title="Letras"
-          onClick={() => navigate("lyrics")}
-        >
-          <Icon name="lyrics" />
-        </button>
-        <button
-          className="icon-button"
-          aria-label="Abrir cola"
-          title="Cola"
-          onClick={() => navigate("queue")}
-        >
-          <Icon name="queue" />
-        </button>
+        {!expanded && (
+          <>
+            <button
+              className="icon-button"
+              aria-label="Abrir letras"
+              title="Letras"
+              onClick={() => navigate("lyrics")}
+            >
+              <Icon name="lyrics" />
+            </button>
+            <button
+              className="icon-button"
+              aria-label="Abrir cola"
+              title="Cola"
+              onClick={() => navigate("queue")}
+            >
+              <Icon name="queue" />
+            </button>
+          </>
+        )}
       </div>
     </footer>
   );

@@ -40,11 +40,6 @@ export function ListeningHistory({ audio }: { audio: AudioController }) {
   }, []);
   return (
     <section>
-      <p className="page-description">
-        Últimas 1000 escuchas. Una reproducción cuenta después de 30 segundos de
-        audio efectivo; las escuchas más cortas también se conservan con su
-        tiempo. Pausar o buscar una posición no suma tiempo.
-      </p>
       {error && (
         <p role="alert" className="inline-note error-note">
           {error}
@@ -75,11 +70,8 @@ export function ListeningHistory({ audio }: { audio: AudioController }) {
       </ul>
       {!visits.length && (
         <div className="library-empty">
-          <h2>Todavía no hay escuchas registradas</h2>
-          <p>
-            El historial se guarda durante la reproducción en la aplicación de
-            escritorio.
-          </p>
+          <h2>Sin historial</h2>
+          <p>Tus reproducciones aparecerán aquí.</p>
         </div>
       )}
     </section>

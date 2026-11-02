@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import type { AudioController } from "./audio";
 import { Icon } from "./Icon";
 import { TrackArtwork } from "./TrackArtwork";
-import { Lyrics } from "./LyricsPanel";
-import { QueuePanel } from "./QueuePanel";
 import { groupIdentity, groupKey, type LibraryTrack } from "./library";
 import {
   albumGroups,
@@ -109,23 +107,20 @@ export function Home({
           ) : (
             <>
               <img src="/favicon.svg" alt="" />
-              <span>El sonido de tu mundo.</span>
             </>
           )}
         </div>
         <div className="hero-copy">
-          <p className="hero-kicker">
-            {current
-              ? "En tu reproductor"
-              : recent.length
-                ? "Vuelve a tu música"
-                : "Tu espacio para escuchar"}
-          </p>
-          <h2>{featured?.title ?? "Todo empieza\ncon una canción."}</h2>
+          {(current || recent.length > 0) && (
+            <p className="hero-kicker">
+              {current ? "Ahora suena" : recent.length ? "Reciente" : ""}
+            </p>
+          )}
+          <h2>{featured?.title ?? "Tu música."}</h2>
           <p className="hero-description">
             {featured
               ? `${featured.artist ?? "Artista desconocido"}${featured.album ? ` · ${featured.album}` : ""}`
-              : "Tus archivos, tus descubrimientos y tus canciones favoritas. Juntos en Zenith."}
+              : "Agrega archivos o conecta una fuente."}
           </p>
           <div className="hero-actions">
             <button
@@ -158,53 +153,25 @@ export function Home({
               className="button subtle"
               onClick={() => navigate(featured ? "nowPlaying" : "sources")}
             >
-              {featured ? "Abrir reproductor" : "Conectar una fuente"}
+              {featured ? "Abrir reproductor" : "Conectar fuente"}
             </button>
-          </div>
-          <div className="hero-footnote">
-            <Icon name="library" size={15} />
-            <span>
-              {tracks.length
-                ? `${tracks.length} canciones en tu biblioteca`
-                : "Tu biblioteca local siempre va contigo"}
-            </span>
           </div>
         </div>
       </section>
-      {!tracks.length && (
-        <section className="welcome-grid">
-          <button onClick={onImport} disabled={!audio.available}>
-            <Icon name="library" size={25} />
-            <span>
-              <strong>Haz espacio a tu música</strong>
-              <small>Agrega una carpeta o tus archivos favoritos.</small>
-            </span>
-            <Icon name="plus" size={18} />
-          </button>
-          <button onClick={() => navigate("sources")}>
-            <Icon name="sources" size={25} />
-            <span>
-              <strong>Conecta tus mundos</strong>
-              <small>Drive, Dropbox, OneDrive y WebDAV.</small>
-            </span>
-            <Icon name="plus" size={18} />
-          </button>
-        </section>
-      )}
       <AlbumShelf
-        title="Vuelve a escucharlos"
+        title="Recientes"
         groups={albumGroups(recent)}
         audio={audio}
         onBrowse={() => navigate("history")}
       />
       <AlbumShelf
-        title="Recién llegados"
+        title="Añadidos recientemente"
         groups={albumGroups(added)}
         audio={audio}
         onBrowse={() => navigate("albums")}
       />
       <AlbumShelf
-        title="Tus favoritos"
+        title="Favoritos"
         groups={albumGroups(favorites)}
         audio={audio}
         onBrowse={() => navigate("favorites")}
@@ -212,21 +179,10 @@ export function Home({
       {!!mostPlayed.length && (
         <section className="music-section">
           <div className="section-heading">
-            <h2>Siempre vuelves a ellas</h2>
-            <span className="secondary">Según tus escuchas</span>
+            <h2>Más escuchadas</h2>
           </div>
           <SongResults tracks={mostPlayed.slice(0, 5)} audio={audio} />
         </section>
-      )}
-      {!tracks.length && (
-        <div className="quiet-note">
-          <img src="/favicon.svg" alt="" />
-          <p>
-            La música es tuya.
-            <br />
-            <span>Zenith solo le da su lugar.</span>
-          </p>
-        </div>
       )}
     </div>
   );
@@ -324,8 +280,8 @@ export function Search({
       {!query.trim() ? (
         <div className="search-invitation">
           <Icon name="search" size={42} />
-          <h2>Encuentra tu próxima canción</h2>
-          <p>Busca un título, un artista, un álbum o una de tus listas.</p>
+          <h2>Busca en tu biblioteca</h2>
+          <p>Canciones, artistas, álbumes y listas.</p>
         </div>
       ) : (
         <>
@@ -418,101 +374,6 @@ export function Search({
   );
 }
 
-export function NowPlaying({
-  audio,
-  current,
-  navigate,
-}: {
-  audio: AudioController;
-  current?: LibraryTrack;
-  navigate: (view: AppView) => void;
-}) {
-  const [panel, setPanel] = useState("lyrics");
-  const track = audio.state.track;
-  return (
-    <div className="now-screen">
-      <section className="now-stage">
-        <TrackArtwork
-          className="now-art"
-          trackId={current?.id}
-          path={track?.path}
-          fallbackId={current?.artwork_id}
-          animate
-          paused={audio.state.status !== "playing"}
-        />
-        <div className="now-copy">
-          <p className="hero-kicker">
-            {audio.state.status === "playing"
-              ? "Ahora suena"
-              : track
-                ? "A tu ritmo"
-                : "Todo listo para escuchar"}
-          </p>
-          <h2>
-            {current?.title ?? track?.title ?? "Un momento para tu música."}
-          </h2>
-          <p>{current?.artist ?? "Elige una canción de tu biblioteca"}</p>
-          <span className="secondary">
-            {[current?.album, track?.format].filter(Boolean).join(" · ")}
-          </span>
-          <div className="hero-actions">
-            <button
-              className="button subtle"
-              onClick={() => navigate("artwork")}
-            >
-              <Icon name="artwork" size={17} />
-              Cambiar portada
-            </button>
-            <button
-              className="button subtle"
-              disabled={!audio.available || !track}
-              onClick={() => void audio.stop()}
-            >
-              Detener
-            </button>
-            <button
-              className="icon-button"
-              title="Pantalla completa"
-              aria-label="Pantalla completa"
-              onClick={() => {
-                const action = document.fullscreenElement
-                  ? document.exitFullscreen()
-                  : document.documentElement.requestFullscreen();
-                void action.catch(audio.reportError);
-              }}
-            >
-              <Icon name="expand" />
-            </button>
-          </div>
-        </div>
-      </section>
-      <section className="now-details">
-        <div className="filter-pills" aria-label="Contenido del reproductor">
-          <button
-            aria-pressed={panel === "lyrics"}
-            onClick={() => setPanel("lyrics")}
-          >
-            <Icon name="lyrics" size={17} />
-            Letras
-          </button>
-          <button
-            aria-pressed={panel === "queue"}
-            onClick={() => setPanel("queue")}
-          >
-            <Icon name="queue" size={17} />A continuación{" "}
-            <span>{audio.state.queue.length}</span>
-          </button>
-        </div>
-        {panel === "lyrics" ? (
-          <Lyrics audio={audio} compact />
-        ) : (
-          <QueuePanel audio={audio} />
-        )}
-      </section>
-    </div>
-  );
-}
-
 export function Downloads({
   audio,
   navigate,
@@ -543,16 +404,15 @@ export function Downloads({
   return (
     <section>
       <p className="page-description">
-        Música de tus fuentes guardada en este equipo. Disponible sin conexión
-        mientras se conserve la caché.
+        Disponible sin conexión. Se elimina al limpiar la caché.
       </p>
       {loading && <p role="status">Cargando descargas…</p>}
       {error && <p role="alert">{error}</p>}
       {!loading && !entries.length && (
         <div className="search-invitation">
           <Icon name="downloads" size={44} />
-          <h2>Tu música, también sin conexión</h2>
-          <p>Las canciones que descargues desde tus fuentes aparecerán aquí.</p>
+          <h2>Sin descargas</h2>
+          <p>Descarga canciones desde tus fuentes.</p>
           <button
             className="button primary"
             onClick={() => navigate("sources")}

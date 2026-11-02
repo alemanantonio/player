@@ -11,12 +11,14 @@ import { Lyrics } from "./LyricsPanel";
 import { ListeningHistory } from "./ListeningHistory";
 import { Sources } from "./SourcesPanel";
 import { Settings } from "./SettingsPanel";
-import { Home, Search, NowPlaying, Downloads } from "./MusicScreens";
+import { Home, Search, Downloads } from "./MusicScreens";
 import { PlayerBar } from "./PlayerBar";
+import { ExpandedPlayer } from "./ExpandedPlayer";
 import { useMusicLibrary } from "./useMusicLibrary";
 import { libraryAction, type LibraryView } from "./library";
 import "./App.css";
 import "./Experience.css";
+import "./Refinement.css";
 
 const libraryRoutes: Partial<Record<AppView, LibraryView>> = {
   library: "Canciones",
@@ -28,6 +30,7 @@ const libraryRoutes: Partial<Record<AppView, LibraryView>> = {
 
 export default function App() {
   const [view, setView] = useState<AppView>("home");
+  const [playerExpanded, setPlayerExpanded] = useState(false);
   const [theme, setTheme] = useState("dark");
   const [query, setQuery] = useState("");
   const [libraryQuery, setLibraryQuery] = useState("");
@@ -44,6 +47,11 @@ export default function App() {
       t.local_path === audio.state.track?.path,
   );
   function navigate(next: AppView) {
+    if (next === "nowPlaying") {
+      setPlayerExpanded(true);
+      return;
+    }
+    setPlayerExpanded(false);
     setView(next);
     setLibraryQuery("");
     main.current?.scrollTo({ top: 0 });
@@ -135,10 +143,6 @@ export default function App() {
             }}
           />
         );
-      case "nowPlaying":
-        return (
-          <NowPlaying audio={audio} current={current} navigate={navigate} />
-        );
       case "playlists":
         return <Playlists audio={audio} />;
       case "queue":
@@ -206,19 +210,12 @@ export default function App() {
           aria-label="Zenith, inicio"
         >
           <img src="/favicon.svg" width="36" height="36" alt="" />
-          <span>
-            ZENITH<small>Tu música, en órbita.</small>
-          </span>
+          <span>Zenith</span>
         </button>
         <nav aria-label="Navegación principal">
           {["main", "library", "collection", "settings"].map((group) => (
             <div className={`nav-group nav-group-${group}`} key={group}>
-              {group === "library" && (
-                <p className="nav-heading">Tu biblioteca</p>
-              )}
-              {group === "collection" && (
-                <p className="nav-heading">Conectado contigo</p>
-              )}
+              {group === "library" && <p className="nav-heading">Biblioteca</p>}
               {navigation
                 .filter((item) => item.group === group)
                 .map((item) => (
@@ -243,38 +240,10 @@ export default function App() {
             </div>
           ))}
         </nav>
-        <div className="sidebar-bottom">
-          <button
-            className="sidebar-now"
-            onClick={() => navigate("nowPlaying")}
-          >
-            <span
-              className={`sound-indicator ${audio.state.status === "playing" ? "playing" : ""}`}
-            >
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-            <span>
-              Ahora suena
-              <small>
-                {current?.title ??
-                  audio.state.track?.title ??
-                  "Disfruta el momento"}
-              </small>
-            </span>
-          </button>
-          <span className="local-note">
-            <span className="connection-dot" />
-            Tu música, siempre contigo
-          </span>
-        </div>
       </aside>
       <main ref={main} id="main-content" tabIndex={-1}>
         <header className="page-header">
           <div className="page-heading">
-            <span className="page-context">Tu universo musical</span>
             <h1>{viewTitle(view)}</h1>
           </div>
           <form
@@ -338,6 +307,16 @@ export default function App() {
         onOpenFiles={() => void openFiles()}
         onFavorite={() => void favorite()}
       />
+      {playerExpanded && (
+        <ExpandedPlayer
+          audio={audio}
+          current={current}
+          navigate={navigate}
+          onOpenFiles={() => void openFiles()}
+          onFavorite={() => void favorite()}
+          onMinimize={() => setPlayerExpanded(false)}
+        />
+      )}
     </div>
   );
 }

@@ -145,6 +145,7 @@ export function TrackArtwork({
     >
       {data ? (
         <img
+          key={data.id || data.url}
           src={playing ? (frames[frame]?.url ?? data.url) : data.url}
           onError={() => setData(null)}
           alt=""

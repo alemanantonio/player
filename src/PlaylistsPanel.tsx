@@ -28,10 +28,6 @@ export function Playlists({ audio }: { audio: AudioController }) {
   }
   return (
     <section className="playlists-panel" aria-busy={busy}>
-      <p className="page-description">
-        Listas guardadas en este equipo. Sus canciones y orden son
-        independientes de la cola.
-      </p>
       <form
         className="toolbar"
         onSubmit={(e) => {
@@ -294,7 +290,7 @@ export function Playlists({ audio }: { audio: AudioController }) {
       ) : (
         <div className="library-empty">
           <h2>Todavía no hay listas</h2>
-          <p>Crea una lista o importa M3U, M3U8 o JSON.</p>
+          <p>Crea o importa una lista.</p>
         </div>
       )}
     </section>

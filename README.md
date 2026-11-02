@@ -6,7 +6,7 @@ The repository provides the application foundation, local audio playback, and a 
 
 ## Listening Interface
 
-Phase 10 turns the development workspace into a daily listening app inspired by the supplied HTML: Zenith branding, dark/light/system themes, Inicio, grouped search, collection galleries, favorites, playlists, history, downloads and connected sources. Ahora suena brings large artwork, lyrics and the independent queue together. The persistent bottom player keeps native playback controls accessible across navigation.
+Phase 10 turns the development workspace into a daily listening app inspired by the supplied HTML: Zenith branding, dark/light/system themes, Inicio, grouped search, collection galleries, favorites, playlists, history, downloads and connected sources. Clicking the mini player expands artwork and controls on the left and synchronized lyrics on the right over a blurred cover background. Minimize or Escape returns to the same page without losing its filters or position. The independent queue and lyric/artwork editing remain accessible from the expanded player.
 
 All existing library, metadata, playlist, lyric, artwork and provider actions remain reachable through these listening flows. Advanced tools use disclosures instead of filling the main track rows. Development phase checklists are no longer part of the product. See the [interface design notes](docs/design.md) for navigation, design decisions and validation.
 

@@ -25,10 +25,12 @@ type IconName =
   | "more"
   | "close"
   | "expand"
+  | "minimize"
   | "plus";
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, ReactNode> = {
+    minimize: <path d="m5 9 7 7 7-7" />,
     home: (
       <>
         <path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7" />

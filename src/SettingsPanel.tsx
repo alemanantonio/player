@@ -24,7 +24,7 @@ function Setting({
     <div className="setting-row">
       <div>
         <h3>{title}</h3>
-        <p>{description}</p>
+        {description && <p>{description}</p>}
       </div>
       <div className="setting-control">{children}</div>
     </div>
@@ -121,8 +121,8 @@ export function Settings({
         {tab === "Apariencia" && (
           <>
             <Setting
-              title="Hazlo tuyo"
-              description="Elige la apariencia de Zenith. Automático sigue el tema de tu equipo."
+              title="Tema"
+              description="Automático sigue el tema de tu equipo."
             >
               <select
                 aria-label="Tema de la interfaz"
@@ -146,10 +146,7 @@ export function Settings({
                 <b>Claro</b>
               </div>
             </div>
-            <Setting
-              title="Idioma"
-              description="Tu biblioteca habla tu idioma."
-            >
+            <Setting title="Idioma" description="">
               <span className="status">Español</span>
             </Setting>
           </>
@@ -157,7 +154,7 @@ export function Settings({
         {tab === "Biblioteca y datos" && (
           <>
             <Setting
-              title="Todo en tu equipo"
+              title="Ubicación de los datos"
               description={
                 status
                   ? status.root
@@ -184,7 +181,7 @@ export function Settings({
             </Setting>
             <Setting
               title="Respaldo de tus datos"
-              description="Conserva una copia de la biblioteca y tus preferencias."
+              description="Biblioteca y preferencias."
             >
               <button
                 className="button"
@@ -200,8 +197,8 @@ export function Settings({
               </button>
             </Setting>
             <Setting
-              title="Llévate tu biblioteca"
-              description="Exporta o restaura tus datos. Las credenciales quedan protegidas en este equipo."
+              title="Importar y exportar"
+              description="Las credenciales no se exportan."
             >
               <div className="button-group">
                 <button
@@ -232,7 +229,7 @@ export function Settings({
             </Setting>
             <Setting
               title="Espacio de la caché"
-              description={`${status ? formatBytes(status.cache_bytes) : "Recursos"} de audio, imágenes y archivos temporales. Limpiarla retira las descargas; tus archivos originales permanecen intactos.`}
+              description={`${status ? formatBytes(status.cache_bytes) : "Audio e imágenes"} en caché. Limpiarla elimina las descargas, sin afectar tus archivos originales.`}
             >
               <button
                 className="button"
@@ -296,8 +293,8 @@ export function Settings({
         {tab === "Privacidad" && (
           <>
             <Setting
-              title="Tus conexiones"
-              description="Decide qué fuentes pueden consultar servicios externos y desconéctalas cuando quieras."
+              title="Fuentes conectadas"
+              description="Conecta o desconecta tus servicios."
             >
               <button className="button" onClick={onSources}>
                 Administrar fuentes
@@ -309,10 +306,7 @@ export function Settings({
             >
               <span className="status">Almacenamiento del sistema</span>
             </Setting>
-            <Setting
-              title="Telemetría"
-              description="Zenith no envía estadísticas de uso."
-            >
+            <Setting title="Telemetría" description="">
               <span className="status">Sin telemetría</span>
             </Setting>
           </>

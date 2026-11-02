@@ -15,12 +15,17 @@ import { TrackArtwork } from "./TrackArtwork";
 export function Lyrics({
   audio,
   compact = false,
+  immersive = false,
+  onManage,
 }: {
   audio: AudioController;
   compact?: boolean;
+  immersive?: boolean;
+  onManage?: () => void;
 }) {
   const { track, error: trackError, selector } = useResourceTrack(audio);
   const [snapshot, setSnapshot] = useState<LyricsSnapshot>(defaultLyrics);
+  const [loadedTrackId, setLoadedTrackId] = useState<string>();
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,6 +43,7 @@ export function Lyrics({
         .then((s) => {
           if (token === generation.current) {
             setSnapshot(s);
+            setLoadedTrackId(trackId);
             setEditor(null);
             setError("");
             setBusy(false);
@@ -57,12 +63,14 @@ export function Lyrics({
     return () => document.removeEventListener("fullscreenchange", change);
   }, []);
   const candidate =
-    snapshot.saved.selected ??
-    (!snapshot.saved.suppress_local
-      ? snapshot.candidates.find(
-          (c) => c.provider === "local" || c.provider === "embedded",
-        )
-      : null);
+    loadedTrackId !== trackId
+      ? null
+      : (snapshot.saved.selected ??
+        (!snapshot.saved.suppress_local
+          ? snapshot.candidates.find(
+              (c) => c.provider === "local" || c.provider === "embedded",
+            )
+          : null));
   const preferences = snapshot.preferences;
   const position =
     track &&
@@ -93,7 +101,7 @@ export function Lyrics({
           : "smooth",
       });
     }
-  }, [line]);
+  }, [line, candidate]);
   async function run(action: object) {
     if (!trackId) return;
     const token = ++generation.current;
@@ -104,6 +112,7 @@ export function Lyrics({
       const s = await lyricsAction(trackId, action);
       if (token === generation.current) {
         setSnapshot(s);
+        setLoadedTrackId(trackId);
         setNotice("Listo");
       }
     } catch (e) {
@@ -161,6 +170,71 @@ export function Lyrics({
     } else if (document.fullscreenElement) await document.exitFullscreen();
     settings({ mode });
   }
+  const reading = (
+    <div
+      className={`lyric-lines${candidate ? "" : " lyrics-empty"}`}
+      aria-label="Letra"
+      tabIndex={0}
+    >
+      {candidate ? (
+        candidate.parsed.lines.map((l, i) => (
+          <p
+            key={i}
+            ref={i === line ? active : undefined}
+            className={i === line ? "active" : ""}
+            aria-current={i === line ? "true" : undefined}
+          >
+            {preferences.mode === "karaoke" && l.words.length
+              ? l.words.map((w, j) => (
+                  <span
+                    className={
+                      j <= activeWord(l.words, position, offset) ? "sung" : ""
+                    }
+                    key={j}
+                  >
+                    {w.text}
+                  </span>
+                ))
+              : l.text || "♪"}
+          </p>
+        ))
+      ) : (
+        <div className="resource-empty">
+          Sin letras guardadas.
+          {immersive && onManage && (
+            <button className="button" onClick={onManage}>
+              Buscar letras
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+  if (immersive)
+    return (
+      <section
+        className={`resources lyrics-engine lyrics-immersive${preferences.mode === "karaoke" ? " immersive-karaoke" : ""}`}
+        style={
+          {
+            "--lyric-color": candidate?.parsed.lines.some((l) => l.at !== null)
+              ? "#ffffff50"
+              : "#d9dae1",
+            "--lyric-active": "#fff",
+            "--lyric-size": "clamp(22px, 2.6vw, 36px)",
+          } as CSSProperties
+        }
+      >
+        {!track ? (
+          <div className="immersive-lyrics-empty">
+            <p>Sin letras</p>
+            <span>Reproduce una canción para ver su letra.</span>
+          </div>
+        ) : (
+          reading
+        )}
+        {(error || trackError) && <p role="alert">{error || trackError}</p>}
+      </section>
+    );
   return (
     <section
       ref={section}
@@ -236,38 +310,7 @@ export function Lyrics({
               </button>
             ))}
           </div>
-          <div className="lyric-lines" aria-label="Letra">
-            {candidate ? (
-              candidate.parsed.lines.map((l, i) => (
-                <p
-                  key={i}
-                  ref={i === line ? active : undefined}
-                  className={i === line ? "active" : ""}
-                  aria-current={i === line ? "true" : undefined}
-                >
-                  {preferences.mode === "karaoke" && l.words.length
-                    ? l.words.map((w, j) => (
-                        <span
-                          className={
-                            j <= activeWord(l.words, position, offset)
-                              ? "sung"
-                              : ""
-                          }
-                          key={j}
-                        >
-                          {w.text}
-                        </span>
-                      ))
-                    : l.text || "♪"}
-                </p>
-              ))
-            ) : (
-              <div className="resource-empty">
-                No hay letras guardadas. Importa un archivo o busca
-                coincidencias.
-              </div>
-            )}
-          </div>
+          {reading}
           {candidate && (
             <p className="secondary">
               {candidate.provider} ·{" "}
@@ -296,7 +339,7 @@ export function Lyrics({
             </p>
           )}
           <details className="advanced-details lyric-tools">
-            <summary>Ajustar, buscar o editar letras</summary>
+            <summary>Opciones de letras</summary>
             <fieldset className="resource-controls" disabled={busy}>
               <legend>Presentación y sincronización</legend>
               <label>

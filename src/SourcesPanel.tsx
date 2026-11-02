@@ -5,7 +5,6 @@ import {
   canConnect,
   canDisconnect,
   canQuery,
-  capabilityLabels,
   emptySources,
   entryActions,
   fieldKind,
@@ -133,13 +132,6 @@ export function Sources({
   return (
     <section className="resources">
       <div className="resource-heading">
-        <div>
-          <h2>Fuentes externas</h2>
-          <p>
-            Conecta servicios independientes sin depender de ellos para usar tu
-            biblioteca.
-          </p>
-        </div>
         <button
           className="button"
           disabled={busy}
@@ -150,7 +142,7 @@ export function Sources({
       </div>
 
       <fieldset className="resource-controls" disabled={busy}>
-        <legend>Consultas externas</legend>
+        <legend>Internet</legend>
         <label>
           <input
             type="checkbox"
@@ -159,13 +151,8 @@ export function Sources({
               void load({ kind: "external", enabled: e.target.checked })
             }
           />
-          Permitir consultas a servicios externos
+          Permitir consultas externas
         </label>
-        <p className="inline-note">
-          Las contraseñas y los tokens viven en el almacén de credenciales del
-          sistema; los documentos de la aplicación solo guardan conexiones y
-          ajustes.
-        </p>
       </fieldset>
 
       {!native && <p className="inline-note">{nativeOnlySourcesMessage}</p>}
@@ -199,13 +186,14 @@ export function Sources({
           <li key={provider.id}>
             <div>
               <strong>{provider.name}</strong>
-              <p>{provider.note}</p>
+              {provider.id === "youtube" && (
+                <p>Solo búsqueda de videos; sin reproducción de audio.</p>
+              )}
               <p>{stateHint(provider)}</p>
-              <p>
-                {provider.capabilities
-                  .map((capability) => capabilityLabels[capability])
-                  .join(" · ")}
-              </p>
+              <details className="source-details">
+                <summary>Detalles</summary>
+                <p>{provider.note}</p>
+              </details>
               {canConnect(provider) && snapshot.external && (
                 <form
                   className="resource-actions"
@@ -469,12 +457,6 @@ export function Sources({
         </p>
       ))}
       {busy && <p role="status">Procesando…</p>}
-      <p className="inline-note">
-        YouTube solo permite buscar y mostrar la fuente original: sin una
-        integración oficial no se descarga ni se reproduce su audio. WebDAV y
-        las nubes descargan a la caché local para reproducirlos con el motor de
-        audio.
-      </p>
     </section>
   );
 }
