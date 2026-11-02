@@ -10,6 +10,7 @@ mod playlist_commands;
 mod playlists;
 mod resources;
 mod session;
+mod sources;
 mod storage;
 
 use tauri::Manager;
@@ -53,6 +54,7 @@ pub fn run() {
             library_commands::library_artwork,
             playlist_commands::playlist_action,
             playlist_commands::history_snapshot,
+            sources::sources_action,
             commands::storage_status,
             commands::appearance_get,
             commands::appearance_save,

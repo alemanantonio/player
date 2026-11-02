@@ -129,7 +129,7 @@ export const phases: Phase[] = [
     objective:
       "Conectar servicios independientes mediante sus capacidades autorizadas.",
     view: "sources",
-    status: "Pendiente",
+    status: "En pruebas",
     checks: [
       "Conectar, consultar y desconectar cada proveedor.",
       "Probar reproducción y descarga cuando estén permitidas.",

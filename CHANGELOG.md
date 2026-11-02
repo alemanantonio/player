@@ -8,6 +8,17 @@
 - Flush staged metadata files through writable handles on Windows; preserve original/recovery-copy safeguards.
 - Run Intel macOS validation on the actual Intel runner instead of repeating ARM tests.
 
+## Unreleased — Phase 9
+
+- Add one external-source contract with declared capabilities, connection states, an explicit external opt-in and a single `sources_action` command.
+- Connect local, YouTube (API-key metadata only), Google Drive, Dropbox, OneDrive (OAuth 2.0 with PKCE and loopback redirect) and HTTPS WebDAV sources.
+- Keep connections and non-secret settings in the export-excluded `config/providers.json` while passwords, keys and tokens stay in the operating system credential store.
+- Add search, folder browsing, validated identifiers, single-store downloads to `cache/audio/` and playback through the audio engine, with Spanish provider errors.
+- Recover pending OAuth URLs after refreshing the screen, preserve unrelated authorizations on disconnect, and allow reconnecting after cancellation, timeout, restart or failed callbacks.
+- Correct Dropbox scopes and bearer-authenticated revocation; declare OneDrive local disconnection without advertising unsupported remote revocation.
+- Prefill saved connection settings, clear submitted secrets, allow expired credentials to be forgotten, and restrict playback/download actions by result kind.
+- Cover the contract with 15 serial Rust tests and frontend unit tests; manual acceptance with real credentials is still pending.
+
 ## Unreleased — Phase 8
 
 - Add validated content-addressed artwork originals, previews, thumbnails and provenance with offline fallback and manual priority overrides.

@@ -291,6 +291,8 @@ Duration is expressed in seconds. This example is not the final schema: document
 
 **Acceptance and testing:** connect, query, play where permitted, and disconnect each source. Test expired tokens, revoked permissions, and network loss; keep local playback operational.
 
+**Implementation notes:** phase 9 implements one provider contract with declared capabilities and states, six providers (local, YouTube metadata-only with a user-supplied API key, Google Drive, Dropbox and OneDrive through OAuth 2.0 with PKCE and a loopback redirect, and HTTPS WebDAV), and a single `sources_action` command. Connections and non-secret settings persist in the export-excluded `config/providers.json`, while passwords, keys and tokens live in the operating system credential store. Network actions stay behind the explicit external opt-in, identifiers and endpoints are validated, downloads are stored once in `cache/audio/` for the audio engine, and a lost network never affects local playback. See [external-sources.md](external-sources.md) for the contract, provider endpoints, limits, tests and pending manual acceptance. Tracked as "En pruebas".
+
 ## Phase 10. Graphical Interface and User Experience
 
 **Objective:** build a consistent visual system and all player screens.

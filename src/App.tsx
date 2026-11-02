@@ -22,6 +22,7 @@ import { Artwork } from "./ArtworkPanel";
 import { TrackArtwork } from "./TrackArtwork";
 import { Lyrics } from "./LyricsPanel";
 import { ListeningHistory } from "./ListeningHistory";
+import { Sources } from "./SourcesPanel";
 
 const navigation: { view: View; label: string }[] = [
   { view: "library", label: "Biblioteca" },
@@ -317,54 +318,7 @@ export default function App() {
         return <Artwork audio={audio} />;
       case "sources":
         return (
-          <>
-            <p className="page-description">
-              Conecta fuentes sin depender de ellas para usar tu biblioteca
-              local.
-            </p>
-            <ul className="plain-list">
-              {[
-                "Archivos locales",
-                "YouTube",
-                "Google Drive",
-                "Dropbox",
-                "OneDrive",
-                "WebDAV",
-              ].map((source) => (
-                <li key={source}>
-                  <span className="row-icon">
-                    <Icon
-                      name={
-                        source === "Archivos locales" ? "library" : "sources"
-                      }
-                    />
-                  </span>
-                  <div className="grow">
-                    <strong>{source}</strong>
-                    <span className="secondary">
-                      {source === "Archivos locales"
-                        ? "Biblioteca local disponible"
-                        : "Sin conectar"}
-                    </span>
-                  </div>
-                  {source === "Archivos locales" ? (
-                    <button
-                      className="button small"
-                      onClick={() => setView("library")}
-                    >
-                      Abrir biblioteca
-                    </button>
-                  ) : (
-                    <PendingButton phase={9}>Conectar</PendingButton>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <p className="inline-note">
-              La autenticación y las conexiones reales se implementarán en la
-              fase 9.
-            </p>
-          </>
+          <Sources audio={audio} onOpenLibrary={() => setView("library")} />
         );
       case "equalizer":
         return (
@@ -725,11 +679,14 @@ export default function App() {
                   </SettingRow>
                   <SettingRow
                     title="Credenciales"
-                    description="Las conexiones utilizarán almacenamiento protegido del sistema."
+                    description="Las conexiones utilizan el almacenamiento protegido del sistema."
                   >
-                    <PendingButton phase={9}>
+                    <button
+                      className="button"
+                      onClick={() => setView("sources")}
+                    >
                       Administrar conexiones
-                    </PendingButton>
+                    </button>
                   </SettingRow>
                 </>
               )}

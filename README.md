@@ -2,7 +2,7 @@
 
 A local-first desktop music player built with Tauri 2, React, TypeScript, and Rust.
 
-The repository provides the application foundation, local audio playback, and a persistent local music library with import, monitoring, metadata editing, favorites, statistics, and duplicate reporting. Lyrics, external artwork providers, and cloud sources remain planned in the [roadmap](docs/roadmap.md). The audio engine selection, format matrix, and manual verification steps are documented in [audio-engine.md](docs/audio-engine.md).
+The repository provides the application foundation, local audio playback, and a persistent local music library with import, monitoring, metadata editing, favorites, statistics, and duplicate reporting. Lyrics, artwork providers, and external source connections are implemented and tracked as in-progress in the [roadmap](docs/roadmap.md). The audio engine selection, format matrix, and manual verification steps are documented in [audio-engine.md](docs/audio-engine.md).
 
 ## Development Interface
 
@@ -23,6 +23,12 @@ Phase 6 adds normalized names with original-value preservation, source-neutral t
 ## Playlists, Queue, and History
 
 **Listas** supports persistent playlist editing and M3U/M3U8/JSON interchange. **Cola** supports appending, play-next insertion, reordering, removal, an explicit saved copy, and automatic session restoration without autoplay. **Historial** records credited listening time and play counts, including files outside the library. See [Phase 5](docs/playlists-queue.md) for data contracts, counting rules, and installed-build acceptance.
+
+## External Sources
+
+Phase 9 adds **Fuentes**, where every provider declares its own capabilities, so the interface only offers search, browsing, playback, download, or revocation when the provider supports it. Local library search works with no network and with the external opt-in disabled. YouTube connects with your own API key for metadata only — no audio is extracted, so it declares no playback or download. Google Drive, Dropbox, and OneDrive connect through OAuth 2.0 with PKCE using your own client ID and a loopback redirect; WebDAV needs an HTTPS address with username and password.
+
+Connections and non-secret settings persist in `config/providers.json`, which the data export never includes, while passwords, API keys, client secrets, and tokens stay in the operating system credential store. Network actions stay off until **Permitir consultas a servicios externos** is enabled. Downloads are stored once in `cache/audio/` and handed to the audio engine, so playback keeps working when a token expires or the network is lost. See [External sources](docs/external-sources.md) for the contract, provider endpoints, limits, tests, and pending manual acceptance.
 
 ## Local Storage
 
@@ -81,3 +87,5 @@ GitHub Actions checks the frontend and compiles Windows x64, macOS Intel/Apple S
 Lyrics / Letras: [Phase 7 implementation and provider status](docs/lyrics-engine.md).
 
 Artwork / Portadas: [Phase 8 implementation and provider status](docs/artwork-engine.md).
+
+External sources / Fuentes: [Phase 9 implementation and provider status](docs/external-sources.md).
