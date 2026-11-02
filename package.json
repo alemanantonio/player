@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run check:paths && tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.node.json --noEmit",
@@ -16,9 +16,10 @@
     "lint": "eslint . --max-warnings 0",
     "rust:test": "cargo test --locked --manifest-path src-tauri/Cargo.toml",
     "rust:check": "cargo check --locked --manifest-path src-tauri/Cargo.toml",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+    "check": "npm run check:paths && npm run typecheck && npm run lint && npm run format:check && npm test",
     "test:watch": "vitest",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "check:paths": "node scripts/check-module-paths.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
