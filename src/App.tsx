@@ -15,12 +15,12 @@ import {
   type StorageStatus,
 } from "./storage";
 import "./App.css";
-import { Library } from "./Library";
-import { Playlists } from "./Playlists";
+import { Library } from "./LibraryPanel";
+import { Playlists } from "./PlaylistsPanel";
 import { QueuePanel } from "./QueuePanel";
-import { Artwork } from "./Artwork";
+import { Artwork } from "./ArtworkPanel";
 import { TrackArtwork } from "./TrackArtwork";
-import { Lyrics } from "./Lyrics";
+import { Lyrics } from "./LyricsPanel";
 import { ListeningHistory } from "./ListeningHistory";
 
 const navigation: { view: View; label: string }[] = [

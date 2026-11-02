@@ -2,6 +2,8 @@
 
 ## CI portability fixes
 
+- Give view components distinct Panel filenames and reject case-insensitive module collisions before Quality/build checks.
+
 - Normalize location-removal paths using the same canonical identity as import on macOS and Windows.
 - Flush staged metadata files through writable handles on Windows; preserve original/recovery-copy safeguards.
 - Run Intel macOS validation on the actual Intel runner instead of repeating ARM tests.

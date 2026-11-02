@@ -81,3 +81,5 @@ Windows additionally rejected flushing a staged tag rewrite through a read-only 
 The Intel macOS CI job uses `macos-15-intel`, so Rust tests and desktop compilation actually run on Intel; `macos-15` is the ARM runner. No failing tests are skipped or weakened.
 
 En español: se corrige la identidad de rutas equivalentes al quitar ubicaciones y el permiso de escritura necesario para sincronizar etiquetas en Windows. Se prueba Intel en un runner Intel y se conservan todas las pruebas de regresión.
+
+The next CI run confirmed the Rust fixes on all platforms and exposed a separate TypeScript resolution failure during the desktop frontend build: `Library.tsx`/`library.ts`, `Playlists.tsx`/`playlists.ts`, `Lyrics.tsx`/`lyrics.ts` and `Artwork.tsx`/`artwork.ts` resolve ambiguously on case-insensitive filesystems. Components now use `*Panel.tsx` filenames. `check:paths` rejects duplicate case-folded extensionless source module names on every platform and runs in both Quality and production builds.
