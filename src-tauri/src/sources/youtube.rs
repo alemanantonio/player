@@ -342,6 +342,7 @@ mod tests {
 
     #[test]
     fn validates_decodable_aac_and_reuses_cache_without_a_helper() {
+        let _guard = super::super::tests::serial();
         use base64::Engine as _;
         let root = std::env::temp_dir().join(format!(
             "zenith-youtube-test-{:032x}",

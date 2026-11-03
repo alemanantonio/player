@@ -120,10 +120,12 @@ se presentan como una prueba de ejecución en Monterey.
 - Live keyless search returned results. This environment uses a TLS inspection
   proxy; the diagnostic invocation used its trusted system CA, with certificate
   verification enabled. Production does not disable TLS verification.
-- A live test download reported success but returned an invalid, truncated
-  container; it failed independent ffprobe validation. This motivated decoder
-  validation before promoting a file to cache. End-to-end live audio playback
-  is not claimed as verified here.
+- A live test download reported success but the media response was a 195-byte
+  HTML page saying "Site Unavailable", not audio; it failed independent ffprobe
+  validation. The adapter rejects this response rather than caching it as music.
+  Decoder validation additionally prevents accepting truncated containers.
+  End-to-end live audio playback cannot be verified through this environment's
+  unavailable media endpoint and is not claimed as verified here.
 - Verified the downloaded macOS helper checksums and Mach-O minimum versions:
   yt-dlp x86_64 10.13 / arm64 11.0; Node x86_64 11.0. Upstream supports the
   standalone yt-dlp package on 10.15+, which is the conservative package minimum.
