@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import type { AudioController } from "./audio";
+import { entryFromPath } from "./playlists";
 import {
   canConnect,
   canDisconnect,
@@ -144,7 +145,10 @@ export function Sources({
       provider: entry.provider,
       id: entry.id,
     });
-    if (next?.downloaded) audio.openFiles([next.downloaded]);
+    if (next?.downloaded)
+      audio.openEntries([
+        { ...entryFromPath(next.downloaded), title: entry.name },
+      ]);
   }
 
   const pending = providers.filter((item) => item.state === "pending");
